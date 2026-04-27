@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>韓語學習寶庫 - Grand 4.4</title>
+    <style>
+        :root { 
+            --primary: #94a7ae; --bg: #f5f2ee; --text: #4a4a4a; 
+            --success: #a7b3a5; --danger: #d9a094; --white: #ffffff;
+            --accent: #b8a47e; --shadow: rgba(0, 0, 0, 0.06);
+            --card-bg: #ffffff;
+        }
+        [data-theme="dark"] {
+            --bg: #1a1c1e; --text: #e1e2e5; --white: #2d2f31;
+            --card-bg: #2d2f31; --shadow: rgba(0, 0, 0, 0.3);
+            --primary: #a7b8be;
+        }
+        * { box-sizing: border-box; transition: all 0.25s ease; }
+        body { font-family: "PingFang SC", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 110px; overflow-x: hidden; }
+        
+        .page { display: none; padding: 20px; width: 100%; max-width: 420px; margin: 0 auto; animation: pageIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 導航 */
+        .nav-bar { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 12px 0; border-radius: 25px; box-shadow: 0 10px 30px var(--shadow); z-index: 1000; }
+        .nav-item { cursor: pointer; font-size: 0.7rem; text-align: center; color: #888; flex: 1; }
+        .nav-item.active { color: var(--primary); font-weight: bold; transform: translateY(-3px); }
+        .nav-icon { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+
+        /* 統計與進度 */
+        .stat-box { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .stat-card { background: var(--card-bg); padding: 15px; border-radius: 20px; width: 48%; text-align: center; box-shadow: 0 4px 15px var(--shadow); border-bottom: 4px solid var(--primary); }
+        .stat-num { display: block; font-size: 1.5rem; font-weight: 900; color: var(--primary); }
+        .progress-container { width: 100%; background: rgba(0,0,0,0.05); height: 8px; border-radius: 10px; margin: 10px 0 20px; overflow: hidden; }
+        .progress-bar { background: var(--primary); height: 100%; width: 0%; }
+
+        /* 卡片 */
+        .card { background: var(--card-bg); padding: 22px; border-radius: 30px; box-shadow: 0 8px 20px var(--shadow); margin-bottom: 20px; border-left: 8px solid var(--primary); width: 100%; position: relative; }
+        input, select, textarea { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 14px; background: rgba(150, 150, 150, 0.08); color: var(--text); font-size: 1rem; outline: none; }
+        .btn-main { background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: bold; width: 100%; padding: 16px; margin-top: 10px; cursor: pointer; font-size: 1rem; }
+
+        /* MC 選項視覺重製 */
+        .quiz-mc-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .mc-option { 
+            width: 100%; 
+            padding: 18px; 
+            border-radius: 20px; 
+            background: var(--white); 
+            border: 2px solid rgba(150, 150, 150, 0.1);
+            cursor: pointer; 
+            text-align: left; 
+            font-size: 1rem; 
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 10px var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .mc-option:active { transform: scale(0.97); background: rgba(150,150,150,0.05); }
+        .mc-option::before { 
+            content: attr(data-prefix); 
+            margin-right: 15px; 
+            width: 28px; height: 28px; 
+            background: rgba(150,150,150,0.1); 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 0.8rem; font-weight: bold; color: var(--primary);
+        }
+        .mc-option.correct { border-color: var(--success); background: #f0f7f0; }
+        .mc-option.wrong { border-color: var(--danger); background: #fff5f5; }
+
+        /* 閃卡與其他 */
+        .flash-container { perspective: 1000px; width: 100%; height: 260px; margin: 20px 0; }
+        .flash-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .flash-card.flipped { transform: rotateY(180deg); }
+        .flash-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 25px; box-shadow: 0 10px 25px var(--shadow); border: 2px solid var(--primary); }
+        .flash-front { background: var(--card-bg); font-size: 2.5rem; font-weight: 900; }
+        .flash-back { background: var(--primary); color: white; transform: rotateY(180deg); font-size: 1.8rem; font-weight: bold; }
+
+        .pill-box { display: flex; background: rgba(150,150,150,0.08); padding: 5px; border-radius: 14px; margin-bottom: 15px; }
+        .pill { flex: 1; padding: 8px; border: none; background: transparent; color: #888; cursor: pointer; font-size: 0.7rem; border-radius: 10px; text-align: center; }
+        .pill.active { background: var(--white); color: var(--primary); font-weight: bold; box-shadow: 0 2px 6px var(--shadow); }
+        
+        .action-btns { display: flex; gap: 12px; margin-top: 12px; justify-content: flex-end; }
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 0.8rem; font-weight: bold; opacity: 0.7; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="settings-bar" style="padding: 20px 25px 0; max-width: 420px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+        <div class="theme-dots" style="display:flex; gap:8px;">
+            <div class="dot active" style="width:22px; height:22px; border-radius:50%; background:#94a7ae; cursor:pointer;" onclick="setThemeColor('#94a7ae', this)"></div>
+            <div class="dot" style="width:22px; height:22px; border-radius:50%; background:#e3b7b7; cursor:pointer;" onclick="setThemeColor('#e3b7b7', this)"></div>
+            <div class="dot" style="width:22px; height:22px; border-radius:50%; background:#b5c4b1; cursor:pointer;" onclick="setThemeColor('#b5c4b1', this)"></div>
+            <div class="dot" style="width:22px; height:22px; border-radius:50%; background:#c5b5d1; cursor:pointer;" onclick="setThemeColor('#c5b5d1', this)"></div>
+            <div class="dot" style="width:22px; height:22px; border-radius:50%; background:#b8a47e; cursor:pointer;" onclick="setThemeColor('#b8a47e', this)"></div>
+        </div>
+        <button onclick="toggleDarkMode()" style="background:none; border:none; font-size:1.3rem; cursor:pointer;">🌓</button>
+    </div>
+
+    <div id="page-add-v" class="page active">
+        <div style="font-style: italic; font-size: 0.85rem; color: var(--accent); margin-bottom: 15px; text-align: center;" id="quote-display">“今天也是努力的一天”</div>
+        <div class="stat-box">
+            <div class="stat-card"><span class="stat-num" id="stat-v">0</span><span class="stat-label">已收錄單詞</span></div>
+            <div class="stat-card"><span class="stat-num" id="stat-s">0</span><span class="stat-label">已收藏句子</span></div>
+        </div>
+        <div class="progress-container"><div class="progress-bar" id="v-progress"></div></div>
+        
+        <h2 id="v-header">錄入新詞</h2>
+        <div class="card">
+            <input type="text" id="v-ko" placeholder="輸入韓文單詞...">
+            <div style="display:flex; gap:10px;">
+                <button onclick="openNaver()" style="flex:1; background:#03c75a; color:white; border:none; padding:12px; border-radius:12px; font-size:0.8rem; cursor:pointer; font-weight:bold;">Naver</button>
+                <button onclick="getAutoTranslation()" style="flex:1; background:var(--primary); color:white; border:none; padding:12px; border-radius:12px; font-size:0.8rem; cursor:pointer; font-weight:bold;">AI 翻譯</button>
+            </div>
+            <select id="v-pos">
+                <option value="名詞">名詞</option><option value="動詞">動詞</option><option value="形容詞">形容詞</option><option value="語法">語法</option>
+            </select>
+            <input type="text" id="v-zh" placeholder="中文/英文含義">
+            <button class="btn-main" id="v-save-btn" onclick="saveVocab()">存入寶庫</button>
+        </div>
+    </div>
+
+    <div id="page-v-list" class="page">
+        <h2>詞庫寶庫</h2>
+        <div class="pill-box">
+            <button class="pill active" id="sort-recent" onclick="setSort('recent')">最近</button>
+            <button class="pill" id="sort-alpha" onclick="setSort('alpha')">A-Z</button>
+            <button class="pill" id="sort-type" onclick="setSort('type')">詞性篩選</button>
+        </div>
+        <div id="type-tags" class="hidden" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px;"></div>
+        <input type="text" id="v-search" placeholder="🔍 搜索單詞..." oninput="renderVocab()">
+        <div id="vocab-display"></div>
+    </div>
+
+    <div id="page-quiz" class="page">
+        <h2>挑戰測驗</h2>
+        <div class="pill-box">
+            <button class="pill active" id="qm-zhko" onclick="setQuizMode('zh-ko')">CN→KR</button>
+            <button class="pill" id="qm-kozh" onclick="setQuizMode('ko-zh')">KR→CN</button>
+            <button class="pill" id="qm-mc" onclick="setQuizMode('mc')">MC</button>
+        </div>
+        <div class="card" style="text-align:center; min-height: 280px; border-left:10px solid var(--accent);">
+            <div id="q-question" style="font-size:1.6rem; font-weight:bold; margin-bottom:10px;">?</div>
+            
+            <div id="quiz-input-area">
+                <input type="text" id="q-input" placeholder="輸入答案...">
+                <button class="btn-main" onclick="checkQuiz()">驗證答案</button>
+            </div>
+            
+            <div id="quiz-mc-area" class="quiz-mc-grid hidden"></div>
+            
+            <div id="q-feedback" style="margin-top:20px; font-weight:bold; font-size:1.1rem; min-height: 24px;"></div>
+            <button onclick="startQuiz()" style="background:none; border:none; color:var(--primary); margin-top:25px; cursor:pointer;">跳過此題</button>
+        </div>
+    </div>
+
+    <div id="page-flash" class="page">
+        <h2>記憶閃卡</h2>
+        <div class="flash-container">
+            <div class="flash-card" id="f-card" onclick="this.classList.toggle('flipped')">
+                <div class="flash-face flash-front" id="f-front">韓文</div>
+                <div class="flash-face flash-back" id="f-back">翻譯</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-main" onclick="speakFlash(event)" style="background:var(--white); color:var(--primary); border:2px solid var(--primary); flex:1;">🔊 發音</button>
+            <button class="btn-main" onclick="nextFlash()" style="flex:2;">下一個</button>
+        </div>
+    </div>
+
+    <div id="page-add-s" class="page">
+        <h2 id="s-header">句子錄入</h2>
+        <div class="card">
+            <input type="text" id="s-topic" placeholder="語法主題">
+            <textarea id="s-ko" placeholder="韓文句子..." rows="3"></textarea>
+            <textarea id="s-zh" placeholder="翻譯..." rows="2"></textarea>
+            <textarea id="s-other" placeholder="備註..."></textarea>
+            <button class="btn-main" id="s-save-btn" style="background:var(--accent)" onclick="saveSentence()">存入句庫</button>
+        </div>
+    </div>
+    <div id="page-s-list" class="page"><h2>語法句庫</h2><div id="sen-display"></div></div>
+
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="showPage('add-v', 0)"><span class="nav-icon">✨</span>錄入</div>
+        <div class="nav-item" onclick="showPage('v-list', 1)"><span class="nav-icon">📖</span>詞庫</div>
+        <div class="nav-item" onclick="showPage('flash', 2)"><span class="nav-icon">🎴</span>閃卡</div>
+        <div class="nav-item" onclick="showPage('add-s', 3)"><span class="nav-icon">💡</span>句錄</div>
+        <div class="nav-item" onclick="showPage('s-list', 4)"><span class="nav-icon">📜</span>句庫</div>
+        <div class="nav-item" onclick="showPage('quiz', 5)"><span class="nav-icon">🏆</span>測驗</div>
+    </nav>
+
+    <script>
+        const quotes = ["오늘의 노력이 내일의 실력이 된다.", "천 리 길도 한 걸음부터.", "매일 조금씩, 꾸준함이 승리한다."];
+        let vocabs = JSON.parse(localStorage.getItem('KV_vFinal')) || [];
+        let sentences = JSON.parse(localStorage.getItem('KV_sFinal')) || [];
+        let flashIdx = 0, quizMode = 'zh-ko', currentQuiz = null, activeSort = 'recent', selectedType = '全部', vEditId = null, sEditId = null;
+
+        function setThemeColor(color, el) { 
+            document.documentElement.style.setProperty('--primary', color); 
+            document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function toggleDarkMode() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+
+        function showPage(pId, idx) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + pId).classList.add('active');
+            document.querySelectorAll('.nav-item')[idx].classList.add('active');
+            updateStats();
+            if(pId === 'v-list') renderVocab();
+            if(pId === 's-list') renderSentences();
+            if(pId === 'flash') updateFlash();
+            if(pId === 'quiz') startQuiz();
+        }
+
+        function updateStats() {
+            document.getElementById('stat-v').innerText = vocabs.length;
+            document.getElementById('stat-s').innerText = sentences.length;
+            document.getElementById('v-progress').style.width = Math.min((vocabs.length / 50) * 100, 100) + '%';
+        }
+
+        function saveVocab() {
+            const ko = document.getElementById('v-ko').value.trim(), zh = document.getElementById('v-zh').value.trim(), pos = document.getElementById('v-pos').value;
+            if(!ko || !zh) return;
+            if(vEditId) {
+                const i = vocabs.findIndex(x => x.id === vEditId);
+                vocabs[i] = { ...vocabs[i], ko, zh, pos }; vEditId = null;
+                document.getElementById('v-header').innerText = "錄入新詞";
+            } else { vocabs.unshift({ id: Date.now(), ko, zh, pos }); }
+            localStorage.setItem('KV_vFinal', JSON.stringify(vocabs));
+            document.getElementById('v-ko').value = ''; document.getElementById('v-zh').value = '';
+            showPage('v-list', 1);
+        }
+
+        function editVocab(id) {
+            vEditId = id; const v = vocabs.find(x => x.id === id);
+            document.getElementById('v-ko').value = v.ko; document.getElementById('v-zh').value = v.zh; document.getElementById('v-pos').value = v.pos;
+            document.getElementById('v-header').innerText = "編輯單詞";
+            showPage('add-v', 0);
+        }
+
+        function renderVocab() {
+            const term = document.getElementById('v-search').value.toLowerCase();
+            let filtered = vocabs.filter(v => v.ko.includes(term) || v.zh.includes(term));
+            if (activeSort === 'type' && selectedType !== '全部') filtered = filtered.filter(v => v.pos === selectedType);
+            if (activeSort === 'alpha') filtered.sort((a,b) => a.ko.localeCompare(b.ko, 'ko'));
+            else filtered.sort((a,b) => b.id - a.id);
+            document.getElementById('vocab-display').innerHTML = filtered.map(v => `
+                <div class="card">
+                    <div><b>${v.ko} (${v.pos})</b><br><span style="opacity:0.7;">${v.zh}</span></div>
+                    <div class="action-btns">
+                        <button class="action-btn" style="color:var(--accent)" onclick="editVocab(${v.id})">編輯</button>
+                        <button class="action-btn" style="color:var(--danger)" onclick="deleteItem('v', ${v.id})">刪除</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        function setSort(mode) {
+            activeSort = mode;
+            document.querySelectorAll('#page-v-list .pill').forEach(p => p.classList.remove('active'));
+            document.getElementById('sort-' + mode).classList.add('active');
+            const tagContainer = document.getElementById('type-tags');
+            if(mode === 'type') { tagContainer.classList.remove('hidden'); renderTypeTags(); } 
+            else { tagContainer.classList.add('hidden'); selectedType = '全部'; renderVocab(); }
+        }
+
+        function renderTypeTags() {
+            const types = ['全部', ...new Set(vocabs.map(v => v.pos))];
+            document.getElementById('type-tags').innerHTML = types.map(t => `<div class="tag ${selectedType === t ? 'active' : ''}" style="font-size:0.75rem; padding:6px 14px; border-radius:12px; background:rgba(150,150,150,0.1); cursor:pointer; border:1px solid transparent;" onclick="filterByType('${t}')">${t}</div>`).join('');
+            renderVocab();
+        }
+        function filterByType(type) { selectedType = type; renderTypeTags(); }
+
+        // --- 測驗 MC 重製邏輯 ---
+        function startQuiz() {
+            if(vocabs.length < 1) return;
+            currentQuiz = vocabs[Math.floor(Math.random()*vocabs.length)];
+            const qEl = document.getElementById('q-question');
+            const mcArea = document.getElementById('quiz-mc-area');
+            const inputArea = document.getElementById('quiz-input-area');
+            const feedback = document.getElementById('q-feedback');
+
+            feedback.innerText = ""; 
+            document.getElementById('q-input').value = "";
+
+            if(quizMode === 'mc') {
+                qEl.innerText = `${currentQuiz.ko}`;
+                inputArea.classList.add('hidden');
+                mcArea.classList.remove('hidden');
+                
+                let choices = [currentQuiz.zh];
+                while(choices.length < 4 && vocabs.length >= 4) {
+                    let r = vocabs[Math.floor(Math.random()*vocabs.length)].zh;
+                    if(!choices.includes(r)) choices.push(r);
+                }
+                choices.sort(() => Math.random() - 0.5);
+                const prefixes = ['A', 'B', 'C', 'D'];
+                mcArea.innerHTML = choices.map((c, i) => `
+                    <div class="mc-option" data-prefix="${prefixes[i]}" onclick="checkMCChoice(this, '${c}')">${c}</div>
+                `).join('');
+            } else {
+                qEl.innerText = quizMode === 'zh-ko' ? currentQuiz.zh : currentQuiz.ko;
+                inputArea.classList.remove('hidden');
+                mcArea.classList.add('hidden');
+            }
+        }
+
+        function checkMCChoice(el, choice) {
+            const feedback = document.getElementById('q-feedback');
+            // 清除之前的狀態
+            document.querySelectorAll('.mc-option').forEach(opt => opt.classList.remove('correct', 'wrong'));
+            
+            if(choice === currentQuiz.zh) {
+                el.classList.add('correct');
+                feedback.innerText = "✅ 太棒了！";
+                feedback.style.color = "var(--success)";
+                setTimeout(startQuiz, 1000);
+            } else {
+                el.classList.add('wrong');
+                feedback.innerText = "❌ 再試試看？";
+                feedback.style.color = "var(--danger)";
+            }
+        }
+
+        function checkQuiz() {
+            const ans = document.getElementById('q-input').value.trim().toLowerCase();
+            const correct = (quizMode === 'zh-ko' ? currentQuiz.ko : currentQuiz.zh).toLowerCase();
+            const f = document.getElementById('q-feedback');
+            if(ans === correct) { f.innerText = "✅ 正確"; f.style.color="var(--success)"; setTimeout(startQuiz, 1000); }
+            else { f.innerText = "❌ 答案: " + (quizMode === 'zh-ko' ? currentQuiz.ko : currentQuiz.zh); f.style.color="var(--danger)"; }
+        }
+
+        function setQuizMode(m) { quizMode = m; document.querySelectorAll('#page-quiz .pill').forEach(p => p.classList.remove('active')); document.getElementById('qm-' + m.replace('-','')).classList.add('active'); startQuiz(); }
+        function updateFlash() { if(vocabs.length === 0) return; const card = document.getElementById('f-card'); card.classList.remove('flipped'); setTimeout(() => { const f = vocabs[flashIdx]; document.getElementById('f-front').innerText = f.ko; document.getElementById('f-back').innerHTML = `(${f.pos})<br>${f.zh}`; }, 100); }
+        function nextFlash() { if(vocabs.length > 0) { flashIdx = (flashIdx + 1) % vocabs.length; updateFlash(); } }
+        function speakFlash(e) { e.stopPropagation(); if(vocabs.length === 0) return; const u = new SpeechSynthesisUtterance(vocabs[flashIdx].ko); u.lang = 'ko-KR'; window.speechSynthesis.speak(u); }
+        function saveSentence() { const topic = document.getElementById('s-topic').value, ko = document.getElementById('s-ko').value, zh = document.getElementById('s-zh').value, other = document.getElementById('s-other').value; if(!topic || !ko || !zh) return; if(sEditId) { const i = sentences.findIndex(x => x.id === sEditId); sentences[i] = { ...sentences[i], topic, ko, zh, other }; sEditId = null; } else { sentences.unshift({ id: Date.now(), topic, ko, zh, other }); } localStorage.setItem('KV_sFinal', JSON.stringify(sentences)); ['s-topic','s-ko','s-zh','s-other'].forEach(id => document.getElementById(id).value = ''); showPage('s-list', 4); }
+        function editSentence(id) { sEditId = id; const s = sentences.find(x => x.id === id); document.getElementById('s-topic').value = s.topic; document.getElementById('s-ko').value = s.ko; document.getElementById('s-zh').value = s.zh; document.getElementById('s-other').value = (s.other || ''); showPage('add-s', 3); }
+        function renderSentences() { document.getElementById('sen-display').innerHTML = sentences.map(s => `<div class="card"><span style="font-size:1.4rem; font-weight:900; color:var(--primary); display:block;"># ${s.topic}</span><span style="font-size:1.2rem; font-weight:bold; display:block;">${s.ko}</span><span style="display:block; opacity:0.8;">${s.zh}</span><div class="action-btns"><button class="action-btn" style="color:var(--accent)" onclick="editSentence(${s.id})">編輯</button><button class="action-btn" style="color:var(--danger)" onclick="deleteItem('s', ${s.id})">刪除</button></div></div>`).join(''); }
+        function deleteItem(t, id) { if(confirm("確定刪除？")) { if(t === 'v') vocabs = vocabs.filter(x => x.id !== id); else sentences = sentences.filter(x => x.id !== id); localStorage.setItem(t==='v'?'KV_vFinal':'KV_sFinal', JSON.stringify(t==='v'?vocabs:sentences)); t==='v'?renderVocab():renderSentences(); updateStats(); } }
+        function openNaver() { const t = document.getElementById('v-ko').value; if(t) window.open(`https://dict.naver.com/kozhdict/#/search?query=${encodeURIComponent(t)}`); }
+        async function getAutoTranslation() { const t = document.getElementById('v-ko').value; if(!t) return; const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(t)}&langpair=ko|zh-CN`); const data = await res.json(); if(data.responseData.translatedText) document.getElementById('v-zh').value = data.responseData.translatedText; }
+        
+        window.onload = () => { 
+            document.getElementById('quote-display').innerText = quotes[Math.floor(Math.random()*quotes.length)];
+            updateStats(); 
+        };
+    </script>
+</body>
+</html>
