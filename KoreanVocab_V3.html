@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>韓語學習寶庫 - Grand 8.2 (Pale & Root Assistant)</title>
+    <!-- 引入全新柔和字體：Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { 
+            /* 預設：灰藍淡色系 */
+            --primary: #a1b4ba; 
+            --bg: #f2f5f6; 
+            --text: #5a5d60; 
+            --success: #a3c5a3; 
+            --danger: #e2b6b6;  
+            --white: #ffffff;
+            
+            /* 背景玻璃卡片 */
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            
+            /* 極致純淨的無邊框白泡泡 */
+            --bubble-bg: #ffffff;
+            --bubble-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            --bubble-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.08);
+            
+            /* 彈窗背景 */
+            --modal-bg: #ffffff;
+        }
+        
+        [data-theme="dark"] {
+            --bg: #1e2022 !important;
+            --text: #e1e2e5 !important; 
+            --white: #2d2f31 !important;
+            --primary: #b5c7cd !important;
+            
+            --glass-bg: rgba(40, 42, 45, 0.4);
+            
+            --bubble-bg: #282a2d;
+            --bubble-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            --bubble-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.3);
+            
+            --modal-bg: #232527;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        
+        body { 
+            font-family: 'Nunito', 'Noto Sans TC', 'Noto Sans KR', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding-bottom: 120px; 
+            overflow-x: hidden; 
+        }
+        
+        .page { display: none; padding: 20px; width: 100%; max-width: 440px; margin: 0 auto; animation: pageIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .page.active { display: block !important; }
+        @keyframes pageIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { font-weight: 800; font-size: 2rem; margin-bottom: 24px; color: var(--primary); letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;}
+
+        .card { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 24px; 
+            border-radius: 28px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); 
+            margin-bottom: 20px; 
+            border: none;
+        }
+        
+        input, select, textarea { 
+            width: 100%; padding: 16px 20px; margin: 8px 0; 
+            border: none !important; 
+            outline: none !important;
+            border-radius: 20px; 
+            background: var(--bubble-bg); 
+            color: var(--text); font-size: 1.05rem; font-family: inherit; font-weight: 600;
+            box-shadow: var(--bubble-shadow);
+        }
+        input:focus, select:focus, textarea:focus { 
+            box-shadow: var(--bubble-shadow-hover); 
+            transform: translateY(-1px);
+        }
+        input::placeholder, textarea::placeholder { opacity: 0.4; font-weight: 700; }
+        
+        /* 動態原型輸入框的動畫效果 */
+        #v-root-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-top: -8px; 
+            opacity: 0;
+        }
+        #v-root-container.show {
+            max-height: 100px; 
+            margin-top: 0;
+            opacity: 1;
+        }
+
+        .btn-main { 
+            background: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 800; 
+            width: 100%; padding: 16px; margin-top: 10px; cursor: pointer; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-main:active { transform: scale(0.96); }
+        
+        .btn-icon { background: var(--bubble-bg); border: none; width: 40px; height: 40px; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary); box-shadow: var(--bubble-shadow); }
+
+        .nav-bar { 
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 420px; 
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+            display: flex; justify-content: space-around; padding: 12px 0; border-radius: 32px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.06); z-index: 1000; 
+        }
+        .nav-item { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #b0b0b0; flex: 1; position: relative; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item span { font-size: 0.7rem; font-weight: 800; }
+        .nav-indicator { position: absolute; top: -8px; width: 32px; height: 4px; background: var(--primary); border-radius: 4px; opacity: 0; transform: scaleX(0); transition: 0.3s; }
+        .nav-item.active .nav-indicator { opacity: 1; transform: scaleX(1); }
+
+        .pill-box { display: flex; background: var(--bubble-bg); padding: 6px; border-radius: 20px; border: none; box-shadow: var(--bubble-shadow); }
+        .pill { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text); opacity: 0.5; cursor: pointer; font-size: 0.9rem; border-radius: 14px; font-weight: 800; }
+        .pill.active { background: var(--primary); color: white; opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 14px 28px; border-radius: 20px; font-weight: 800; z-index: 2000; opacity: 0; pointer-events: none; }
+        .toast.show { opacity: 1; animation: popDown 0.4s forwards; }
+        @keyframes popDown { from { transform: translate(-50%, -30px); } to { transform: translate(-50%, 0); } }
+
+        .flash-container { perspective: 1000px; width: 100%; height: 320px; margin: 25px 0; }
+        .flash-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .flash-card.flipped { transform: rotateY(180deg); }
+        .flash-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; box-shadow: var(--bubble-shadow); border: none; }
+        .flash-front { background: var(--bubble-bg); font-size: 3rem; font-weight: 900; color: var(--text); }
+        .flash-back { background: var(--primary); color: white; transform: rotateY(180deg); font-size: 1.8rem; font-weight: bold; }
+        
+        .quiz-hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 800; }
+        .score-pill { background: var(--bubble-bg); padding: 8px 20px; border-radius: 16px; color: var(--primary); box-shadow: var(--bubble-shadow); border: none;}
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 3000; display: none; align-items: center; justify-content: center; opacity: 0; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { 
+            background: var(--modal-bg); 
+            width: 88%; max-width: 400px; border-radius: 35px; padding: 35px 30px; 
+            position: relative; transform: translateY(30px); 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15); border: none;
+            max-height: 85vh; overflow-y: auto; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; color: var(--text); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">操作成功！</div>
+
+    <!-- 句子詳情 Modal -->
+    <div id="sentence-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal(event)"><i data-lucide="x" style="width:18px;"></i></button>
+            <h3 id="m-title" style="color:var(--primary); margin-top:0; font-size:1.6rem; font-weight:900;">標題</h3>
+            <div id="m-desc" style="font-size:0.95rem; opacity:0.8; margin-bottom:20px; font-weight:700;">簡短描述</div>
+            
+            <div style="background:var(--bubble-bg); box-shadow:var(--bubble-shadow); padding:24px; border-radius:24px; margin-bottom:20px;">
+                <span style="font-size:0.75rem; font-weight:900; color:var(--primary); letter-spacing:2px; margin-bottom:8px; display:block;">韓文原文</span>
+                <b id="m-ko" style="font-size:1.4rem; display:block; margin-bottom:16px; color:var(--text);">韓文句子</b>
+                <div style="border-top: 2px dashed rgba(0,0,0,0.06); margin-bottom: 16px;"></div>
+                <span style="font-size:0.75rem; font-weight:900; color:var(--primary); letter-spacing:2px; margin-bottom:8px; display:block;">中文翻譯</span>
+                <span id="m-zh" style="display:block; opacity:0.8; font-size:1.05rem; font-weight:700;">中文翻譯</span>
+            </div>
+            
+            <div id="m-others" style="background:var(--bubble-bg); box-shadow:var(--bubble-shadow); padding:24px; border-radius:24px; font-size:0.95rem; white-space: pre-wrap; opacity:0.9; line-height:1.6; font-weight:700;">其他備註</div>
+            
+            <button onclick="editModalSentence()" class="btn-main" style="background:var(--primary); color:white; margin-top:30px;">
+                <i data-lucide="pencil" style="width:18px;"></i> 編輯此句
+            </button>
+        </div>
+    </div>
+
+    <!-- 頂部工具列 -->
+    <header style="max-width: 440px; margin: 0 auto; padding: 25px 25px 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display:flex; gap:12px;">
+            <div class="dot active" style="width:26px; height:26px; border-radius:50%; background:#a1b4ba; box-shadow:0 0 0 3px white, 0 4px 10px rgba(0,0,0,0.1); transform:scale(1.1); cursor:pointer;" onclick="setTheme('#f2f5f6', '#a1b4ba', this)"></div>
+            <div class="dot" style="width:26px; height:26px; border-radius:50%; background:#e4bbc0; cursor:pointer;" onclick="setTheme('#fdf6f7', '#e4bbc0', this)"></div>
+            <div class="dot" style="width:26px; height:26px; border-radius:50%; background:#c1d3c2; cursor:pointer;" onclick="setTheme('#f5f8f5', '#c1d3c2', this)"></div>
+            <div class="dot" style="width:26px; height:26px; border-radius:50%; background:#cabed6; cursor:pointer;" onclick="setTheme('#f8f6fc', '#cabed6', this)"></div>
+            <div class="dot" style="width:26px; height:26px; border-radius:50%; background:#c2af8f; cursor:pointer;" onclick="setTheme('#fcfaf7', '#c2af8f', this)"></div>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button class="btn-icon" onclick="exportData()"><i data-lucide="download" style="width:18px;"></i></button>
+            <label class="btn-icon" style="cursor:pointer;">
+                <i data-lucide="upload" style="width:18px;"></i>
+                <input type="file" class="hidden" accept=".json" onchange="importData(event)">
+            </label>
+            <button class="btn-icon" onclick="toggleDarkMode()"><i data-lucide="moon" style="width:18px;"></i></button>
+        </div>
+    </header>
+
+    <!-- 1. 錄入單詞 -->
+    <div id="page-add-v" class="page active">
+        <!-- 頂部資料統計泡泡 -->
+        <div style="display:flex; gap:16px; margin-bottom:16px;">
+            <div style="flex:1; background:var(--bubble-bg); border-radius:24px; padding:20px; text-align:center; box-shadow:var(--bubble-shadow);">
+                <i data-lucide="book-open" style="color:var(--primary); width:24px; margin-bottom:8px; opacity:0.9;"></i>
+                <div id="stat-v-count" style="font-size:2.2rem; font-weight:900; color:var(--text); line-height:1;">0</div>
+                <div style="font-size:0.8rem; font-weight:800; color:var(--primary); margin-top:8px; letter-spacing:1px;">單詞總數</div>
+            </div>
+            <div style="flex:1; background:var(--bubble-bg); border-radius:24px; padding:20px; text-align:center; box-shadow:var(--bubble-shadow);">
+                <i data-lucide="layers" style="color:var(--primary); width:24px; margin-bottom:8px; opacity:0.9;"></i>
+                <div id="stat-s-count" style="font-size:2.2rem; font-weight:900; color:var(--text); line-height:1;">0</div>
+                <div style="font-size:0.8rem; font-weight:800; color:var(--primary); margin-top:8px; letter-spacing:1px;">句型總數</div>
+            </div>
+        </div>
+
+        <h1 id="v-header"><i data-lucide="sparkles" style="color:#fbbf24;"></i> 錄入新詞</h1>
+        <div class="card">
+            <!-- 變形後型態輸入框 -->
+            <input type="text" id="v-ko" placeholder="輸入單字 / 變形後型態 (e.g. 먹어요)">
+            
+            <select id="v-pos" onchange="toggleRootInput()">
+                <option value="名詞">名詞 (Noun)</option>
+                <option value="動詞">動詞 (Verb)</option>
+                <option value="形容詞">形容詞 (Adjective)</option>
+                <option value="語法">語法 (Grammar)</option>
+            </select>
+
+            <!-- 動態顯示的原型輸入框 + 找原型輔助按鈕 -->
+            <div id="v-root-container">
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <input type="text" id="v-root" placeholder="📝 輸入原型 (Root) e.g. 먹다" style="flex: 1;">
+                    <button onclick="findRootNaver()" style="background:var(--primary); color:white; border:none; border-radius:20px; cursor:pointer; font-weight:800; display:flex; justify-content:center; align-items:center; padding: 0 16px; margin: 8px 0; box-shadow:0 4px 15px rgba(0,0,0,0.1); white-space:nowrap;">
+                        <i data-lucide="zap" style="width:18px; margin-right:4px;"></i> 查原型
+                    </button>
+                </div>
+            </div>
+            
+            <input type="text" id="v-zh" placeholder="中文、英文或備註">
+            
+            <div style="display:flex; gap:12px; margin-top: 12px;">
+                <button onclick="openNaver()" style="flex:1; background:#00c73c; color:white; border:none; border-radius:20px; cursor:pointer; font-weight:800; display:flex; justify-content:center; align-items:center; gap:6px; box-shadow:0 4px 15px rgba(0,199,60,0.2); padding:16px;">
+                    <i data-lucide="search" style="width:18px;"></i> Naver
+                </button>
+                <button onclick="getAutoTranslation()" style="flex:1; background:var(--primary); color:white; border:none; border-radius:20px; cursor:pointer; font-weight:800; display:flex; justify-content:center; align-items:center; gap:6px; box-shadow:0 4px 15px rgba(0,0,0,0.1); padding:16px;">
+                    <i data-lucide="languages" style="width:18px;"></i> 自動翻譯
+                </button>
+            </div>
+
+            <button class="btn-main" onclick="saveVocab()" style="margin-top: 20px;">存入寶庫</button>
+        </div>
+    </div>
+
+    <!-- 2. 詞庫頁 -->
+    <div id="page-v-list" class="page">
+        <h1><i data-lucide="book-open"></i> 詞庫寶庫</h1>
+        
+        <div style="display:flex; justify-content:space-between; gap: 12px; margin-bottom: 20px;">
+            <div class="pill-box" style="flex: 1.2; margin-bottom: 0;">
+                <button id="tab-recent" class="pill active" onclick="setVocabSort('recent')">🕒 最近</button>
+                <button id="tab-alpha" class="pill" onclick="setVocabSort('alpha')">🔤 A-Z</button>
+            </div>
+            <select id="v-filter-pos" onchange="renderVocab()" style="flex: 1; margin: 0; padding: 10px 14px; border-radius: 20px; font-weight: 800; color: var(--primary);">
+                <option value="all">全部詞性</option>
+                <option value="名詞">名詞 (Noun)</option>
+                <option value="動詞">動詞 (Verb)</option>
+                <option value="形容詞">形容詞 (Adj)</option>
+                <option value="語法">語法 (Grammar)</option>
+            </select>
+        </div>
+
+        <div style="position:relative; margin-bottom:20px;">
+            <i data-lucide="search" style="position:absolute; left:20px; top:24px; color:var(--text); opacity:0.4; width:20px;"></i>
+            <input type="text" id="v-search" placeholder="搜索單詞..." oninput="renderVocab()" style="padding-left:52px;">
+        </div>
+        <div id="vocab-display" style="max-height: 52vh; overflow-y: auto; padding-right:5px; padding-bottom: 20px;"></div>
+    </div>
+
+    <!-- 3. 閃卡頁 -->
+    <div id="page-flash" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h1 style="margin:0;"><i data-lucide="brain-circuit"></i> 智慧閃卡</h1>
+            <button onclick="initFlashcards()" style="background:var(--bubble-bg); border:none; box-shadow:var(--bubble-shadow); padding:10px 16px; border-radius:16px; color:var(--primary); font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;"><i data-lucide="rotate-ccw" style="width:16px;"></i> 重置</button>
+        </div>
+        <div style="text-align:center; font-weight:800; opacity:0.5; margin-bottom:10px;">剩餘未掌握: <span id="f-counter" style="color:var(--primary); font-size:1.2rem;">0</span></div>
+        
+        <div class="flash-container">
+            <div class="flash-card" id="f-card" onclick="flipCard()">
+                <div class="flash-face flash-front">
+                    <span style="font-size:0.75rem; font-weight:900; color:var(--primary); letter-spacing:2px; margin-bottom:10px;">韓文單詞</span>
+                    <div id="f-front-text">準備開始</div>
+                </div>
+                <div class="flash-face flash-back" id="f-back"></div>
+            </div>
+        </div>
+        
+        <div id="flash-actions" style="display:flex; gap:15px; opacity:0; pointer-events:none; transition:0.3s;">
+            <button class="btn-main" style="background:var(--bubble-bg); color:var(--danger); box-shadow:var(--bubble-shadow);" onclick="markFlashcard(false)"><i data-lucide="x-circle"></i> 還沒記熟</button>
+            <button class="btn-main" style="background:var(--success); color:white; box-shadow:0 8px 20px rgba(163, 197, 163, 0.4);" onclick="markFlashcard(true)"><i data-lucide="check-circle-2"></i> 已經掌握</button>
+        </div>
+    </div>
+
+    <!-- 4. 句錄頁 -->
+    <div id="page-add-s" class="page">
+        <h1 id="s-header"><i data-lucide="scroll-text"></i> 句子錄入</h1>
+        <div class="card">
+            <input type="text" id="s-title" placeholder="標題 (Title)">
+            <input type="text" id="s-desc" placeholder="簡短描述 (Short Description)">
+            <textarea id="s-ko" placeholder="韓文句子 (Sentence)..." rows="3"></textarea>
+            <textarea id="s-zh" placeholder="翻譯 (Translation)..." rows="2"></textarea>
+            <textarea id="s-others" placeholder="其他備註 (Others)..." rows="2"></textarea>
+            <button class="btn-main" onclick="saveSentence()">存入句庫</button>
+        </div>
+    </div>
+
+    <!-- 5. 句庫頁 -->
+    <div id="page-s-list" class="page">
+        <h1><i data-lucide="layers"></i> 語法句庫</h1>
+        <div id="sen-display" style="max-height: 65vh; overflow-y: auto; padding-right:5px; padding-bottom: 20px;"></div>
+    </div>
+
+    <!-- 6. 測驗頁 -->
+    <div id="page-quiz" class="page">
+        <div class="quiz-hud">
+            <h1 style="margin:0;"><i data-lucide="trophy"></i> 測驗</h1>
+            <div class="score-pill">積分: <span id="q-score">0</span></div>
+        </div>
+        <div id="quiz-area" class="card" style="text-align:center; padding: 40px 20px; border:none;">
+            <span style="font-size:0.75rem; font-weight:900; color:var(--primary); letter-spacing:2px; margin-bottom:10px; display:block;">請問這是什麼意思？</span>
+            <div id="q-question" style="font-size:2.5rem; margin-bottom:30px; font-weight:900; color:var(--text);">準備挑戰</div>
+            <div id="quiz-options"></div>
+            <div id="q-feedback" style="margin-top:20px; font-weight:800; font-size:1.1rem; height: 26px;"></div>
+            <button id="q-start-btn" class="btn-main" onclick="startQuiz()" style="margin-top:25px;">開始測驗</button>
+        </div>
+    </div>
+
+    <!-- 懸浮導航欄 -->
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="showPage('add-v', 0)">
+            <div class="nav-indicator"></div><i data-lucide="plus"></i><span>錄入</span>
+        </div>
+        <div class="nav-item" onclick="showPage('v-list', 1)">
+            <div class="nav-indicator"></div><i data-lucide="book-open"></i><span>詞庫</span>
+        </div>
+        <div class="nav-item" onclick="showPage('flash', 2)">
+            <div class="nav-indicator"></div><i data-lucide="scan-face"></i><span>閃卡</span>
+        </div>
+        <div class="nav-item" onclick="showPage('add-s', 3)">
+            <div class="nav-indicator"></div><i data-lucide="lightbulb"></i><span>句錄</span>
+        </div>
+        <div class="nav-item" onclick="showPage('s-list', 4)">
+            <div class="nav-indicator"></div><i data-lucide="scroll"></i><span>句庫</span>
+        </div>
+        <div class="nav-item" onclick="showPage('quiz', 5)">
+            <div class="nav-indicator"></div><i data-lucide="trophy"></i><span>測驗</span>
+        </div>
+    </nav>
+
+    <script>
+        lucide.createIcons();
+
+        let vocabs = JSON.parse(localStorage.getItem('KV_vFinal')) || [];
+        let sentences = JSON.parse(localStorage.getItem('KV_sFinal')) || [];
+        let vEditId = null, sEditId = null;
+        let currentModalSentenceId = null; 
+        let vocabSortMode = 'recent';
+        let flashDeck = [], currentFlash = null, currentQuiz = null, score = 0, combo = 0;
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.backgroundColor = isError ? "var(--danger)" : "var(--success)";
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function showPage(pId, idx) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.nav-item')[idx].classList.add('active');
+            
+            if(pId === 'v-list') renderVocab();
+            if(pId === 's-list') renderSentences();
+            if(pId === 'flash' && flashDeck.length === 0 && vocabs.length > 0) initFlashcards();
+        }
+
+        function setTheme(bgStr, primaryStr, el) { 
+            document.documentElement.style.setProperty('--bg', bgStr);
+            document.documentElement.style.setProperty('--primary', primaryStr);
+            document.querySelectorAll('.dot').forEach(d => { d.classList.remove('active'); d.style.boxShadow = "none"; d.style.transform = "scale(1)"; });
+            el.classList.add('active'); el.style.boxShadow = "0 0 0 3px white, 0 4px 10px rgba(0,0,0,0.1)"; el.style.transform = "scale(1.1)";
+            document.body.removeAttribute('data-theme');
+        }
+
+        function toggleDarkMode() { 
+            document.body.getAttribute('data-theme') === 'dark' ? document.body.removeAttribute('data-theme') : document.body.setAttribute('data-theme', 'dark');
+        }
+
+        function updateStats() {
+            document.getElementById('stat-v-count').innerText = vocabs.length;
+            document.getElementById('stat-s-count').innerText = sentences.length;
+        }
+
+        function toggleRootInput() {
+            const pos = document.getElementById('v-pos').value;
+            const rootContainer = document.getElementById('v-root-container');
+            const rootInput = document.getElementById('v-root');
+            
+            if (pos === '動詞' || pos === '形容詞') {
+                rootContainer.classList.add('show');
+            } else {
+                rootContainer.classList.remove('show');
+                rootInput.value = ''; 
+            }
+        }
+
+        // --- 核心：一鍵查找原型 ---
+        function findRootNaver() {
+            const t = document.getElementById('v-ko').value.trim();
+            if(!t) { 
+                showToast("請先輸入變形後的韓文喔！", true); 
+                return; 
+            }
+            // 開啟 Naver 字典，Naver 的語法解析引擎會自動在最頂端顯示「기본형 (基本型 / 原型)」
+            window.open(`https://zh.dict.naver.com/#/search?query=${encodeURIComponent(t)}`);
+        }
+
+        function saveVocab() {
+            const ko = document.getElementById('v-ko').value.trim();
+            const zh = document.getElementById('v-zh').value.trim();
+            const pos = document.getElementById('v-pos').value;
+            const root = document.getElementById('v-root').value.trim(); 
+            
+            if(!ko || !zh) { showToast("請填寫完整喔！", true); return; }
+            
+            if(vEditId) {
+                const i = vocabs.findIndex(x => x.id === vEditId);
+                if(i !== -1) vocabs[i] = { ...vocabs[i], ko, zh, pos, root };
+                vEditId = null; document.getElementById('v-header').innerHTML = '<i data-lucide="sparkles" style="color:#fbbf24;"></i> 錄入新詞'; lucide.createIcons();
+                showToast("更新成功！"); 
+            } else {
+                vocabs.unshift({ id: Date.now(), ko, zh, pos, root }); showToast("已存入寶庫！"); 
+            }
+            
+            localStorage.setItem('KV_vFinal', JSON.stringify(vocabs));
+            document.getElementById('v-ko').value = ''; 
+            document.getElementById('v-zh').value = '';
+            document.getElementById('v-root').value = ''; 
+            toggleRootInput(); 
+            updateStats();
+        }
+
+        function setVocabSort(mode) {
+            vocabSortMode = mode;
+            document.getElementById('tab-recent').classList.remove('active'); document.getElementById('tab-alpha').classList.remove('active');
+            document.getElementById('tab-' + mode).classList.add('active'); renderVocab();
+        }
+
+        function renderVocab() {
+            const term = document.getElementById('v-search').value.toLowerCase();
+            const filterPos = document.getElementById('v-filter-pos').value; 
+            
+            let list = vocabs.filter(v => v.ko.includes(term) || v.zh.includes(term));
+            
+            if (filterPos !== 'all') {
+                list = list.filter(v => v.pos === filterPos);
+            }
+
+            if (vocabSortMode === 'alpha') list.sort((a, b) => a.ko.localeCompare(b.ko, 'ko')); else list.sort((a, b) => b.id - a.id); 
+            
+            document.getElementById('vocab-display').innerHTML = list.length === 0 ? '<p style="text-align:center; opacity:0.5; font-weight:bold; margin-top:30px;">空空如也...</p>' : 
+                list.map(v => {
+                    let rootHtml = v.root ? `<span style="font-size:0.95rem; color:var(--primary); font-weight:700; margin-left:6px;">(${v.root})</span>` : '';
+                    return `
+                    <div style="background:var(--bubble-bg); padding:24px; border-radius:24px; margin-bottom:16px; box-shadow:var(--bubble-shadow); border:none; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:1.3rem; font-weight:900; color:var(--text);">${v.ko} ${rootHtml} <span style="font-size:0.7rem; background:var(--primary); color:white; padding:4px 10px; border-radius:12px; opacity:0.9; margin-left:6px; vertical-align:middle;">${v.pos}</span></div>
+                            <div style="margin-top:6px; opacity:0.7; font-size:0.95rem; font-weight:700;">${v.zh}</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="editVocab(${v.id})" class="btn-icon" style="width:36px; height:36px; background:var(--bg); box-shadow:none;"><i data-lucide="pencil" style="width:16px;"></i></button>
+                            <button onclick="deleteItem('v', ${v.id})" class="btn-icon" style="width:36px; height:36px; color:var(--danger); background:var(--bg); box-shadow:none;"><i data-lucide="trash-2" style="width:16px;"></i></button>
+                        </div>
+                    </div>
+                `}).join('');
+            lucide.createIcons();
+        }
+
+        function editVocab(id) {
+            vEditId = id; const v = vocabs.find(x => x.id === id);
+            document.getElementById('v-ko').value = v.ko; 
+            document.getElementById('v-zh').value = v.zh; 
+            document.getElementById('v-pos').value = v.pos;
+            
+            document.getElementById('v-root').value = v.root || '';
+            toggleRootInput(); 
+            
+            document.getElementById('v-header').innerHTML = '<i data-lucide="pencil"></i> 編輯單詞'; lucide.createIcons(); showPage('add-v', 0);
+        }
+
+        function saveSentence() {
+            const title = document.getElementById('s-title').value.trim(), desc = document.getElementById('s-desc').value.trim(), ko = document.getElementById('s-ko').value.trim(), zh = document.getElementById('s-zh').value.trim(), others = document.getElementById('s-others').value.trim();
+            if(!title || !ko) { showToast("標題與韓文不可空白喔", true); return; }
+            if(sEditId) {
+                const i = sentences.findIndex(x => x.id === sEditId);
+                if(i !== -1) sentences[i] = { ...sentences[i], title, desc, ko, zh, others };
+                sEditId = null; document.getElementById('s-header').innerHTML = '<i data-lucide="scroll-text"></i> 句子錄入'; lucide.createIcons();
+                showToast("更新成功！"); 
+            } else {
+                sentences.unshift({ id: Date.now(), title, desc, ko, zh, others }); showToast("已存入句庫！"); 
+            }
+            localStorage.setItem('KV_sFinal', JSON.stringify(sentences));
+            ['s-title', 's-desc', 's-ko', 's-zh', 's-others'].forEach(id => document.getElementById(id).value = '');
+            updateStats();
+        }
+
+        function renderSentences() {
+            document.getElementById('sen-display').innerHTML = sentences.length === 0 ? '<p style="text-align:center; opacity:0.5; font-weight:bold; margin-top:30px;">暫無句子</p>' : 
+                sentences.map(s => `
+                <div style="background:var(--bubble-bg); box-shadow:var(--bubble-shadow); border-radius:24px; padding:24px; border:none; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="openSentenceModal(${s.id})">
+                    <div style="flex:1;">
+                        <div style="color:var(--primary); font-weight:900; font-size:1.2rem; margin-bottom:6px;">${s.title || '無標題'}</div>
+                        <div style="font-size:0.95rem; opacity:0.6; font-weight:700;">${s.desc || '點擊查看詳情...'}</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="event.stopPropagation(); editSentence(${s.id})" class="btn-icon" style="width:36px; height:36px; background:var(--bg); box-shadow:none;"><i data-lucide="pencil" style="width:16px;"></i></button>
+                        <button onclick="event.stopPropagation(); deleteItem('s', ${s.id})" class="btn-icon" style="width:36px; height:36px; color:var(--danger); background:var(--bg); box-shadow:none;"><i data-lucide="trash-2" style="width:16px;"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function openSentenceModal(id) {
+            const s = sentences.find(x => x.id === id);
+            if(!s) return;
+            currentModalSentenceId = id;
+            document.getElementById('m-title').innerText = s.title || '無標題';
+            document.getElementById('m-desc').innerText = s.desc || '';
+            document.getElementById('m-desc').style.display = s.desc ? 'block' : 'none';
+            document.getElementById('m-ko').innerText = s.ko;
+            document.getElementById('m-zh').innerText = s.zh;
+            
+            const othersEl = document.getElementById('m-others');
+            if (s.others && s.others.trim() !== '') {
+                othersEl.innerText = s.others;
+                othersEl.style.display = 'block';
+            } else {
+                othersEl.style.display = 'none';
+            }
+            
+            document.getElementById('sentence-modal').classList.add('active');
+        }
+
+        function closeModal(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('sentence-modal').classList.remove('active');
+            currentModalSentenceId = null;
+        }
+
+        function editModalSentence() {
+            if(currentModalSentenceId) {
+                const id = currentModalSentenceId;
+                closeModal();
+                editSentence(id);
+            }
+        }
+
+        function editSentence(id) {
+            sEditId = id; const s = sentences.find(x => x.id === id);
+            document.getElementById('s-title').value = s.title; document.getElementById('s-desc').value = s.desc; document.getElementById('s-ko').value = s.ko; document.getElementById('s-zh').value = s.zh; document.getElementById('s-others').value = s.others;
+            document.getElementById('s-header').innerHTML = '<i data-lucide="pencil"></i> 編輯句子'; lucide.createIcons(); showPage('add-s', 3); 
+        }
+
+        function deleteItem(type, id) {
+            if(!confirm("確定要刪除嗎？")) return;
+            if(type === 'v') { vocabs = vocabs.filter(x => x.id !== id); localStorage.setItem('KV_vFinal', JSON.stringify(vocabs)); renderVocab(); } 
+            else { sentences = sentences.filter(x => x.id !== id); localStorage.setItem('KV_sFinal', JSON.stringify(sentences)); renderSentences(); }
+            updateStats();
+        }
+
+        function initFlashcards() {
+            if(vocabs.length === 0) { showToast("詞庫是空的喔", true); return; }
+            flashDeck = [...vocabs].sort(() => Math.random() - 0.5);
+            document.getElementById('f-card').classList.remove('flipped'); document.getElementById('flash-actions').style.opacity = '0'; document.getElementById('flash-actions').style.pointerEvents = 'none';
+            nextFlashCard();
+        }
+
+        function nextFlashCard() {
+            document.getElementById('f-counter').innerText = flashDeck.length;
+            document.getElementById('f-card').classList.remove('flipped');
+            document.getElementById('flash-actions').style.opacity = '0'; document.getElementById('flash-actions').style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                if (flashDeck.length === 0) {
+                    document.getElementById('f-front-text').innerHTML = "🎉 太棒了！<br><span style='font-size:1.2rem;'>已複習完畢</span>";
+                    document.getElementById('f-back').innerHTML = ""; currentFlash = null; return;
+                }
+                currentFlash = flashDeck[0]; 
+                document.getElementById('f-front-text').innerText = currentFlash.ko;
+                
+                const rootText = currentFlash.root ? `<div style="font-size:1rem; color:var(--bubble-bg); opacity:0.9; margin-top:8px;">(原型: ${currentFlash.root})</div>` : '';
+                document.getElementById('f-back').innerHTML = `<span style="font-size:0.85rem; opacity:0.8; letter-spacing:2px;">${currentFlash.pos}</span>${rootText}<br><div style="margin-top:12px;">${currentFlash.zh}</div>`;
+            }, 200);
+        }
+
+        function flipCard() {
+            if (!currentFlash) return;
+            const isFlipped = document.getElementById('f-card').classList.toggle('flipped');
+            document.getElementById('flash-actions').style.opacity = isFlipped ? '1' : '0';
+            document.getElementById('flash-actions').style.pointerEvents = isFlipped ? 'auto' : 'none';
+        }
+
+        function markFlashcard(isMemorized) {
+            if (!currentFlash) return;
+            const card = flashDeck.shift(); if (!isMemorized) flashDeck.push(card); 
+            nextFlashCard();
+        }
+
+        function startQuiz() {
+            if(vocabs.length < 4) { showToast("至少需要 4 個單詞才能測驗！", true); return; }
+            document.getElementById('q-start-btn').innerText = "跳過此題";
+            currentQuiz = vocabs[Math.floor(Math.random()*vocabs.length)];
+            const options = [currentQuiz.zh];
+            while(options.length < 4) {
+                let r = vocabs[Math.floor(Math.random()*vocabs.length)].zh;
+                if(!options.includes(r)) options.push(r);
+            }
+            options.sort(() => Math.random() - 0.5); 
+            document.getElementById('q-question').innerText = currentQuiz.ko; document.getElementById('q-feedback').innerText = "";
+            document.getElementById('quiz-options').innerHTML = options.map(o => `
+                <button class="btn-main" style="background:var(--bubble-bg); color:var(--text); border:none; margin-bottom:12px; text-align:left; padding-left:24px; font-weight:800; box-shadow:var(--bubble-shadow);" onclick="checkQuiz(this, '${o}')">${o}</button>
+            `).join('');
+        }
+        
+        function checkQuiz(btn, choice) {
+            Array.from(document.getElementById('quiz-options').children).forEach(b => b.style.pointerEvents = 'none');
+            if(choice === currentQuiz.zh) {
+                score += 10; document.getElementById('q-score').innerText = score;
+                btn.style.background = "var(--success)"; btn.style.color = "white";
+                document.getElementById('q-feedback').innerHTML = "<span style='color:var(--success)'>✅ 答對了！</span>";
+                setTimeout(startQuiz, 1000);
+            } else {
+                btn.style.background = "var(--danger)"; btn.style.color = "white";
+                Array.from(document.getElementById('quiz-options').children).forEach(b => {
+                    if(b.innerText === currentQuiz.zh) { b.style.boxShadow = "0 0 0 3px var(--success)"; b.style.color = "var(--success)"; }
+                });
+                document.getElementById('q-feedback').innerHTML = "<span style='color:var(--danger)'>❌ 答錯了</span>";
+                setTimeout(startQuiz, 2500); 
+            }
+        }
+
+        function exportData() {
+            const blob = new Blob([JSON.stringify({vocabs, sentences})], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Backup.json'; a.click();
+        }
+        function importData(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const data = JSON.parse(event.target.result);
+                if(data.vocabs) { vocabs = data.vocabs; sentences = data.sentences || []; localStorage.setItem('KV_vFinal', JSON.stringify(vocabs)); localStorage.setItem('KV_sFinal', JSON.stringify(sentences)); location.reload(); }
+            };
+            if(e.target.files[0]) reader.readAsText(e.target.files[0]);
+        }
+        function openNaver() { const t = document.getElementById('v-ko').value; if(t) window.open(`https://zh.dict.naver.com/#/search?query=${encodeURIComponent(t)}`); }
+        async function getAutoTranslation() { 
+            const t = document.getElementById('v-ko').value; if(!t) return;
+            document.getElementById('v-zh').placeholder = "翻譯中...";
+            try {
+                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(t)}&langpair=ko|zh-CN`);
+                const data = await res.json();
+                if(data.responseData.translatedText) document.getElementById('v-zh').value = data.responseData.translatedText;
+            } catch(e) {}
+            document.getElementById('v-zh').placeholder = "中文、英文或備註";
+        }
+
+        updateStats(); 
+        toggleRootInput(); 
+        
+    </script>
+</body>
+</html>
