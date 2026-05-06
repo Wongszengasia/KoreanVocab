@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>韓語學習寶庫 - Grand 8.8 (Arcade & Gamification)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { 
+            --primary: #a1b4ba; 
+            --bg: #f2f5f6; 
+            --text: #5a5d60; 
+            --success: #a3c5a3; 
+            --danger: #e2b6b6;  
+            --white: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --bubble-bg: #ffffff;
+            --bubble-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            --bubble-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --modal-bg: #ffffff;
+        }
+        
+        [data-theme="dark"] {
+            --bg: #1e2022 !important;
+            --text: #e1e2e5 !important; 
+            --white: #2d2f31 !important;
+            --primary: #b5c7cd !important;
+            --glass-bg: rgba(40, 42, 45, 0.4);
+            --bubble-bg: #282a2d;
+            --bubble-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            --bubble-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.3);
+            --modal-bg: #232527;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        body { font-family: 'Nunito', 'Noto Sans TC', 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 120px; overflow-x: hidden; }
+        .page { display: none; padding: 20px; width: 100%; max-width: 440px; margin: 0 auto; animation: pageIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .page.active { display: block !important; }
+        @keyframes pageIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { font-weight: 800; font-size: 2rem; margin-bottom: 24px; color: var(--primary); letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;}
+
+        .card { background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 24px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 20px; border: none; }
+        
+        input, select, textarea { width: 100%; padding: 16px 20px; margin: 8px 0; border: none !important; outline: none !important; border-radius: 20px; background: var(--bubble-bg); color: var(--text); font-size: 1.05rem; font-family: inherit; font-weight: 600; box-shadow: var(--bubble-shadow); }
+        input:focus, select:focus, textarea:focus { box-shadow: var(--bubble-shadow-hover); transform: translateY(-1px); }
+        input::placeholder, textarea::placeholder { opacity: 0.4; font-weight: 700; }
+        
+        #v-root-container { max-height: 0; overflow: hidden; transition: max-height 0.4s; margin-top: -8px; opacity: 0; }
+        #v-root-container.show { max-height: 100px; margin-top: 0; opacity: 1; }
+
+        .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+        .tag-pill { background: var(--primary); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .tag-pill:hover { transform: scale(0.95); background: var(--danger); }
+        .tag-display { background: var(--glass-bg); color: var(--primary); border: 2px solid var(--primary); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; margin-right: 6px; display: inline-block; margin-top: 6px; }
+
+        .ex-block { background: var(--glass-bg); padding: 20px; border-radius: 20px; margin-bottom: 12px; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.02); border: 2px dashed rgba(0,0,0,0.05); }
+
+        .btn-main { background: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 800; width: 100%; padding: 16px; margin-top: 10px; cursor: pointer; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-main:active { transform: scale(0.96); }
+        .btn-sub { background: transparent; color: var(--primary); border: 2px dashed var(--primary); border-radius: 20px; font-weight: 800; width: 100%; padding: 14px; margin: 10px 0; cursor: pointer; font-size: 1rem; display: flex; justify-content: center; align-items: center; gap: 8px; opacity: 0.8; }
+        .btn-sub:hover { opacity: 1; background: var(--glass-bg); }
+        .btn-icon { background: var(--bubble-bg); border: none; width: 40px; height: 40px; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary); box-shadow: var(--bubble-shadow); }
+
+        .nav-bar { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 420px; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 12px 0; border-radius: 32px; box-shadow: 0 15px 40px rgba(0,0,0,0.06); z-index: 1000; }
+        .nav-item { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #b0b0b0; flex: 1; position: relative; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item span { font-size: 0.7rem; font-weight: 800; }
+        .nav-indicator { position: absolute; top: -8px; width: 32px; height: 4px; background: var(--primary); border-radius: 4px; opacity: 0; transform: scaleX(0); transition: 0.3s; }
+        .nav-item.active .nav-indicator { opacity: 1; transform: scaleX(1); }
+
+        .pill-box { display: flex; background: var(--bubble-bg); padding: 6px; border-radius: 20px; border: none; box-shadow: var(--bubble-shadow); }
+        .pill { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text); opacity: 0.5; cursor: pointer; font-size: 0.9rem; border-radius: 14px; font-weight: 800; }
+        .pill.active { background: var(--primary); color: white; opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 14px 28px; border-radius: 20px; font-weight: 800; z-index: 2000; opacity: 0; pointer-events: none; }
+        .toast.show { opacity: 1; animation: popDown 0.4s forwards; }
+        @keyframes popDown { from { transform: translate(-50%, -30px); } to { transform: translate(-50%, 0); } }
+
+        .flash-container { perspective: 1000px; width: 100%; height: 320px; margin: 25px 0; }
+        .flash-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .flash-card.flipped { transform: rotateY(180deg); }
+        .flash-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; box-shadow: var(--bubble-shadow); border: none; }
+        .flash-front { background: var(--bubble-bg); font-size: 3rem; font-weight: 900; color: var(--text); }
+        .flash-back { background: var(--primary); color: white; transform: rotateY(180deg); font-size: 1.8rem; font-weight: bold; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 3000; display: none; align-items: center; justify-content: center; opacity: 0; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { background: var(--modal-bg); width: 88%; max-width: 400px; border-radius: 35px; padding: 35px 30px; position: relative; transform: translateY(30px); box-shadow: 0 25px 60px rgba(0,0,0,0.15); border: none; max-height: 85vh; overflow-y: auto; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; color: var(--text); z-index: 10;}
+
+        /* Arcade & Match Game Styles */
+        .quiz-hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 800; }
+        .score-pill { background: var(--bubble-bg); padding: 8px 20px; border-radius: 16px; color: var(--primary); box-shadow: var(--bubble-shadow); border: none; font-size: 1.1rem; display: flex; align-items: center; gap: 6px;}
+        
+        .timer-bar-bg { width: 100%; height: 10px; background: var(--glass-bg); border-radius: 10px; overflow: hidden; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.05); }
+        .timer-bar-fill { height: 100%; background: var(--primary); width: 100%; transition: width 1s linear, background-color 0.3s; }
+        
+        .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        .match-btn { 
+            background: var(--bubble-bg); color: var(--text); border: 2px solid transparent; 
+            padding: 16px 10px; border-radius: 16px; font-weight: 800; font-size: 1rem; 
+            box-shadow: var(--bubble-shadow); cursor: pointer; text-align: center;
+            display: flex; align-items: center; justify-content: center; min-height: 70px;
+            word-break: break-word; user-select: none;
+        }
+        .match-btn.selected { border-color: var(--primary); background: var(--bg); transform: scale(0.96); }
+        .match-btn.correct { background: var(--success); color: white; box-shadow: 0 0 15px rgba(163, 197, 163, 0.6); border-color: var(--success); }
+        .match-btn.wrong { background: var(--danger); color: white; animation: shake 0.3s; border-color: var(--danger); }
+        
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">操作成功！</div>
+
+    <div id="sentence-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal(event)"><i data-lucide="x" style="width:18px;"></i></button>
+            <h3 id="m-title" style="color:var(--primary); margin-top:0; font-size:1.6rem; font-weight:900; line-height:1.2; padding-right:30px;">標題</h3>
+            <div id="m-desc" style="font-size:0.95rem; opacity:0.8; margin-bottom:20px; font-weight:700;">簡短描述</div>
+            
+            <div id="m-examples-container" style="background:var(--bubble-bg); box-shadow:var(--bubble-shadow); padding:24px; border-radius:24px; margin-bottom:20px;"></div>
+            
+            <button onclick="editModalSentence()" class="btn-main" style="background:var(--primary); color:white; margin-top:10px;">
+                <i data-lucide="pencil" style="width:18px;"></i> 編輯此語法
+            </button>
+        </div>
+    </div>
+
+    <header style="max-width: 440px; margin: 0 auto; padding: 25px 25px 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display:flex; gap:12px;">
+            <div class="dot active" style="width:26px; height:26px; border-radius:50%; background:#a1b4ba; box-shadow:0 0 0 3px white, 0 4px 10px rgba(0,0,0,0.1); transform:scale(1.1); cursor:pointer;" onclick="setTheme('#f2f5f6', '#a1b4ba', this)"></div>
+            <div class="dot" style="width:26px; height:26px; border-radius:50%; background:#e4bbc0; cursor:pointer;" onclick="setTheme('#fdf6f7', '#e4bbc0', this)"></div>
+            <div class="dot" style="width:26px; height:26px; border-radius:50%; background:#c1d3c2; cursor:pointer;" onclick="setTheme('#f5f8f5', '#c1d3c2', this)"></div>
+            <div class="dot" style="width:26px; height:26px; border-radius:50%; background:#cabed6; cursor:pointer;" onclick="setTheme('#f8f6fc', '#cabed6', this)"></div>
+            <div class="dot" style="width:26px; height:26px; border-radius:50%; background:#c2af8f; cursor:pointer;" onclick="setTheme('#fcfaf7', '#c2af8f', this)"></div>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button class="btn-icon" onclick="exportData()"><i data-lucide="download" style="width:18px;"></i></button>
+            <label class="btn-icon" style="cursor:pointer;">
+                <i data-lucide="upload" style="width:18px;"></i>
+                <input type="file" class="hidden" accept=".json" onchange="importData(event)">
+            </label>
+            <button class="btn-icon" onclick="toggleDarkMode()"><i data-lucide="moon" style="width:18px;"></i></button>
+        </div>
+    </header>
+
+    <div id="page-add-v" class="page active">
+        <div style="display:flex; gap:16px; margin-bottom:16px;">
+            <div style="flex:1; background:var(--bubble-bg); border-radius:24px; padding:20px; text-align:center; box-shadow:var(--bubble-shadow);">
+                <i data-lucide="book-open" style="color:var(--primary); width:24px; margin-bottom:8px; opacity:0.9;"></i>
+                <div id="stat-v-count" style="font-size:2.2rem; font-weight:900; color:var(--text); line-height:1;">0</div>
+                <div style="font-size:0.8rem; font-weight:800; color:var(--primary); margin-top:8px; letter-spacing:1px;">單詞總數</div>
+            </div>
+            <div style="flex:1; background:var(--bubble-bg); border-radius:24px; padding:20px; text-align:center; box-shadow:var(--bubble-shadow);">
+                <i data-lucide="layers" style="color:var(--primary); width:24px; margin-bottom:8px; opacity:0.9;"></i>
+                <div id="stat-s-count" style="font-size:2.2rem; font-weight:900; color:var(--text); line-height:1;">0</div>
+                <div style="font-size:0.8rem; font-weight:800; color:var(--primary); margin-top:8px; letter-spacing:1px;">語法庫</div>
+            </div>
+        </div>
+
+        <h1 id="v-header"><i data-lucide="sparkles" style="color:#fbbf24;"></i> 錄入新詞</h1>
+        <div class="card">
+            <input type="text" id="v-ko" placeholder="輸入單字 / 變形後型態 (e.g. 먹어요)">
+            
+            <select id="v-pos" onchange="toggleRootInput()">
+                <option value="名詞">名詞 (Noun)</option>
+                <option value="動詞">動詞 (Verb)</option>
+                <option value="形容詞">形容詞 (Adjective)</option>
+                <option value="副詞">副詞 (Adverb)</option>
+                <option value="其他">其他 (Others)</option>
+            </select>
+
+            <div id="v-root-container">
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <input type="text" id="v-root" placeholder="📝 輸入原型 (Root) e.g. 먹다" style="flex: 1;">
+                    <button onclick="findRootNaver()" style="background:var(--primary); color:white; border:none; border-radius:20px; cursor:pointer; font-weight:800; display:flex; justify-content:center; align-items:center; padding: 0 16px; margin: 8px 0; box-shadow:0 4px 15px rgba(0,0,0,0.1); white-space:nowrap;">
+                        <i data-lucide="zap" style="width:18px; margin-right:4px;"></i> 查原型
+                    </button>
+                </div>
+            </div>
+            
+            <input type="text" id="v-zh" placeholder="中文、英文或備註">
+
+            <div id="v-tag-display" class="tag-container"></div>
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <input type="text" id="v-tag-input" placeholder="🏷️ 加標籤 (按 Enter, 空格 或點擊 ➕)" onkeydown="handleTagInput(event)" style="flex: 1;">
+                <button onclick="addTagFromButton()" style="background:var(--primary); color:white; border:none; border-radius:20px; cursor:pointer; font-weight:800; display:flex; justify-content:center; align-items:center; padding: 0 16px; margin: 8px 0; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+                    <i data-lucide="plus" style="width:20px;"></i>
+                </button>
+            </div>
+            
+            <div style="display:flex; gap:12px; margin-top: 12px;">
+                <button onclick="openNaver()" style="flex:1; background:#00c73c; color:white; border:none; border-radius:20px; cursor:pointer; font-weight:800; display:flex; justify-content:center; align-items:center; gap:6px; box-shadow:0 4px 15px rgba(0,199,60,0.2); padding:16px;">
+                    <i data-lucide="search" style="width:18px;"></i> Naver
+                </button>
+                <button onclick="getAutoTranslation()" style="flex:1; background:var(--primary); color:white; border:none; border-radius:20px; cursor:pointer; font-weight:800; display:flex; justify-content:center; align-items:center; gap:6px; box-shadow:0 4px 15px rgba(0,0,0,0.1); padding:16px;">
+                    <i data-lucide="languages" style="width:18px;"></i> 自動翻譯
+                </button>
+            </div>
+
+            <button class="btn-main" onclick="saveVocab()" style="margin-top: 20px;">存入寶庫</button>
+        </div>
+    </div>
+
+    <div id="page-v-list" class="page">
+        <h1><i data-lucide="book-open"></i> 詞庫寶庫</h1>
+        
+        <div style="display:flex; justify-content:space-between; gap: 12px; margin-bottom: 12px;">
+            <div class="pill-box" style="flex: 1.2; margin-bottom: 0;">
+                <button id="tab-recent" class="pill active" onclick="setVocabSort('recent')">🕒 最近</button>
+                <button id="tab-alpha" class="pill" onclick="setVocabSort('alpha')">🔤 A-Z</button>
+            </div>
+            <select id="v-filter-pos" onchange="renderVocab()" style="flex: 1; margin: 0; padding: 10px 14px; border-radius: 20px; font-weight: 800; color: var(--primary);">
+                <option value="all">全部詞性</option>
+                <option value="名詞">名詞 (Noun)</option>
+                <option value="動詞">動詞 (Verb)</option>
+                <option value="形容詞">形容詞 (Adj)</option>
+                <option value="副詞">副詞 (Adverb)</option>
+                <option value="其他">其他 (Others)</option>
+            </select>
+        </div>
+
+        <select id="v-filter-tag" onchange="renderVocab()" style="margin-bottom: 20px; font-weight: 800; color: var(--primary);">
+            <option value="all">所有標籤 (All Tags)</option>
+        </select>
+
+        <div style="position:relative; margin-bottom:20px;">
+            <i data-lucide="search" style="position:absolute; left:20px; top:24px; color:var(--text); opacity:0.4; width:20px;"></i>
+            <input type="text" id="v-search" placeholder="搜索單詞..." oninput="renderVocab()" style="padding-left:52px;">
+        </div>
+        <div id="vocab-display" style="max-height: 48vh; overflow-y: auto; padding-right:5px; padding-bottom: 20px;"></div>
+    </div>
+
+    <div id="page-flash" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h1 style="margin:0;"><i data-lucide="brain-circuit"></i> 智慧閃卡</h1>
+            <button onclick="initFlashcards()" style="background:var(--bubble-bg); border:none; box-shadow:var(--bubble-shadow); padding:10px 16px; border-radius:16px; color:var(--primary); font-weight:800; cursor:pointer; display:flex; align-items:center; gap:6px;"><i data-lucide="rotate-ccw" style="width:16px;"></i> 重置</button>
+        </div>
+        <div style="text-align:center; font-weight:800; opacity:0.5; margin-bottom:10px;">剩餘未掌握: <span id="f-counter" style="color:var(--primary); font-size:1.2rem;">0</span></div>
+        
+        <div class="flash-container">
+            <div class="flash-card" id="f-card" onclick="flipCard()">
+                <div class="flash-face flash-front">
+                    <span style="font-size:0.75rem; font-weight:900; color:var(--primary); letter-spacing:2px; margin-bottom:10px;">韓文單詞</span>
+                    <div id="f-front-text">準備開始</div>
+                </div>
+                <div class="flash-face flash-back" id="f-back"></div>
+            </div>
+        </div>
+        
+        <div id="flash-actions" style="display:flex; gap:15px; opacity:0; pointer-events:none; transition:0.3s;">
+            <button class="btn-main" style="background:var(--bubble-bg); color:var(--danger); box-shadow:var(--bubble-shadow);" onclick="markFlashcard(false)"><i data-lucide="x-circle"></i> 還沒記熟</button>
+            <button class="btn-main" style="background:var(--success); color:white; box-shadow:0 8px 20px rgba(163, 197, 163, 0.4);" onclick="markFlashcard(true)"><i data-lucide="check-circle-2"></i> 已經掌握</button>
+        </div>
+    </div>
+
+    <div id="page-add-s" class="page">
+        <h1 id="s-header"><i data-lucide="scroll-text"></i> 錄入語法</h1>
+        <div class="card">
+            <input type="text" id="s-title" placeholder="語法形式 (e.g. -기 때문에)">
+            <input type="text" id="s-desc" placeholder="簡短描述 / 核心概念 (Short Description)">
+            <div id="s-examples-container" style="margin-top: 16px;"></div>
+            <button class="btn-sub" onclick="addExampleBlock()"><i data-lucide="plus-circle" style="width:18px;"></i> 新增用法 / 例句</button>
+            <button class="btn-main" onclick="saveSentence()" style="margin-top:20px;">存入語法庫</button>
+        </div>
+    </div>
+
+    <div id="page-s-list" class="page">
+        <h1><i data-lucide="layers"></i> 語法寶庫</h1>
+        <div id="sen-display" style="max-height: 65vh; overflow-y: auto; padding-right:5px; padding-bottom: 20px;"></div>
+    </div>
+
+    <div id="page-quiz" class="page">
+        <div class="quiz-hud">
+            <h1 style="margin:0;"><i data-lucide="gamepad-2"></i> 遊樂場</h1>
+            <div class="score-pill"><i data-lucide="star" style="width:16px; fill:var(--primary);"></i> 積分: <span id="q-score" style="font-weight:900; min-width:30px; text-align:center;">0</span></div>
+        </div>
+        
+        <div class="pill-box" style="margin-bottom: 20px;">
+            <button id="tab-arcade-match" class="pill active" onclick="switchArcadeMode('match')">🕒 單字連連看</button>
+            <button id="tab-arcade-grammar" class="pill" onclick="switchArcadeMode('grammar')">🧩 語法情境戰</button>
+        </div>
+
+        <div id="arcade-match" class="card" style="text-align:center; padding: 25px 20px; border:none;">
+            <div id="match-intro">
+                <i data-lucide="timer" style="color:var(--primary); width:40px; height:40px; margin-bottom:15px; opacity:0.8;"></i>
+                <div style="font-size:1.4rem; font-weight:900; margin-bottom:10px; color:var(--text);">60秒 極速配對</div>
+                <div style="font-size:0.95rem; font-weight:700; opacity:0.7; margin-bottom:25px;">點擊配對左邊的韓文與右邊的中文，<br>連擊 Combo 獲得更高分！</div>
+                <button class="btn-main" onclick="startMatchGame()">開始挑戰</button>
+            </div>
+            
+            <div id="match-play" class="hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="font-weight:900; font-size:1.1rem; color:var(--primary);">倒數: <span id="match-time-text">60</span>s</div>
+                    <div id="match-combo-text" style="font-weight:900; font-size:1.1rem; color:var(--success); opacity:0; transition:0.3s;">Combo x2!</div>
+                </div>
+                <div class="timer-bar-bg"><div id="match-time-bar" class="timer-bar-fill"></div></div>
+                
+                <div class="match-grid">
+                    <div id="match-col-left" style="display:flex; flex-direction:column; gap:12px;"></div>
+                    <div id="match-col-right" style="display:flex; flex-direction:column; gap:12px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="arcade-grammar" class="card hidden" style="text-align:center; padding: 30px 20px; border:none;">
+            <div id="grammar-intro">
+                <i data-lucide="puzzle" style="color:var(--primary); width:40px; height:40px; margin-bottom:15px; opacity:0.8;"></i>
+                <div style="font-size:1.4rem; font-weight:900; margin-bottom:10px; color:var(--text);">語法情境戰</div>
+                <div style="font-size:0.95rem; font-weight:700; opacity:0.7; margin-bottom:25px;">根據提供的例句情境，<br>選出正確的語法概念！</div>
+                <button class="btn-main" onclick="startGrammarGame()">開始挑戰</button>
+            </div>
+
+            <div id="grammar-play" class="hidden">
+                <span style="font-size:0.75rem; font-weight:900; color:var(--primary); letter-spacing:2px; margin-bottom:10px; display:block;">請問這句話使用了哪個語法？</span>
+                <div id="g-ko" style="font-size:1.5rem; margin-bottom:12px; font-weight:900; color:var(--text); line-height:1.4;">韓文例句</div>
+                <div id="g-zh" style="font-size:1.05rem; opacity:0.8; font-weight:700; margin-bottom:30px;">中文翻譯</div>
+                
+                <div id="grammar-options"></div>
+                <div id="g-feedback" style="margin-top:20px; font-weight:800; font-size:1.1rem; height: 26px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="showPage('add-v', 0)">
+            <div class="nav-indicator"></div><i data-lucide="plus"></i><span>單詞</span>
+        </div>
+        <div class="nav-item" onclick="showPage('v-list', 1)">
+            <div class="nav-indicator"></div><i data-lucide="book-open"></i><span>詞庫</span>
+        </div>
+        <div class="nav-item" onclick="showPage('flash', 2)">
+            <div class="nav-indicator"></div><i data-lucide="scan-face"></i><span>閃卡</span>
+        </div>
+        <div class="nav-item" onclick="showPage('add-s', 3)">
+            <div class="nav-indicator"></div><i data-lucide="lightbulb"></i><span>語法</span>
+        </div>
+        <div class="nav-item" onclick="showPage('s-list', 4)">
+            <div class="nav-indicator"></div><i data-lucide="scroll"></i><span>語法庫</span>
+        </div>
+        <div class="nav-item" onclick="showPage('quiz', 5)">
+            <div class="nav-indicator"></div><i data-lucide="gamepad-2"></i><span>遊樂場</span>
+        </div>
+    </nav>
+
+    <script>
+        lucide.createIcons();
+
+        let vocabs = JSON.parse(localStorage.getItem('KV_vFinal')) || [];
+        let rawSentences = JSON.parse(localStorage.getItem('KV_sFinal')) || [];
+        let sentences = rawSentences.map(s => (!s.examples ? { ...s, examples: [{ ko: s.ko||'', zh: s.zh||'', others: s.others||'' }] } : s));
+
+        let vEditId = null, sEditId = null, currentModalSentenceId = null, vocabSortMode = 'recent';
+        let flashDeck = [], currentFlash = null, currentTags = []; 
+        let globalScore = parseInt(localStorage.getItem('KV_Score')) || 0;
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.backgroundColor = isError ? "var(--danger)" : "var(--success)";
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function showPage(pId, idx) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.nav-item')[idx].classList.add('active');
+            
+            if(pId === 'v-list') { updateTagFilterDropdown(); renderVocab(); }
+            if(pId === 's-list') renderSentences();
+            if(pId === 'add-s' && !sEditId) { if (document.getElementById('s-examples-container').children.length === 0) addExampleBlock(); }
+            if(pId === 'flash' && flashDeck.length === 0 && vocabs.length > 0) initFlashcards();
+            
+            // 如果離開遊樂場，強制結束連連看遊戲避免背景計時
+            if(pId !== 'quiz' && matchTimerObj) forceEndMatchGame();
+        }
+
+        function setTheme(bgStr, primaryStr, el) { 
+            document.documentElement.style.setProperty('--bg', bgStr); document.documentElement.style.setProperty('--primary', primaryStr);
+            document.querySelectorAll('.dot').forEach(d => { d.classList.remove('active'); d.style.boxShadow = "none"; d.style.transform = "scale(1)"; });
+            el.classList.add('active'); el.style.boxShadow = "0 0 0 3px white, 0 4px 10px rgba(0,0,0,0.1)"; el.style.transform = "scale(1.1)";
+            document.body.removeAttribute('data-theme');
+        }
+
+        function toggleDarkMode() { document.body.getAttribute('data-theme') === 'dark' ? document.body.removeAttribute('data-theme') : document.body.setAttribute('data-theme', 'dark'); }
+
+        function updateStats() {
+            document.getElementById('stat-v-count').innerText = vocabs.length; document.getElementById('stat-s-count').innerText = sentences.length;
+            document.getElementById('q-score').innerText = globalScore;
+        }
+        function addGlobalScore(points) {
+            globalScore += points;
+            localStorage.setItem('KV_Score', globalScore);
+            document.getElementById('q-score').innerText = globalScore;
+            // 添加簡單跳動動畫
+            const scoreEl = document.getElementById('q-score');
+            scoreEl.style.transform = "scale(1.5)"; scoreEl.style.color = "var(--success)";
+            setTimeout(() => { scoreEl.style.transform = "scale(1)"; scoreEl.style.color = "var(--primary)"; }, 300);
+        }
+
+        function toggleRootInput() {
+            const pos = document.getElementById('v-pos').value, rootContainer = document.getElementById('v-root-container'), rootInput = document.getElementById('v-root');
+            if (pos === '動詞' || pos === '形容詞') { rootContainer.classList.add('show'); } else { rootContainer.classList.remove('show'); rootInput.value = ''; }
+        }
+
+        function findRootNaver() {
+            const t = document.getElementById('v-ko').value.trim();
+            if(!t) { showToast("請先輸入變形後的韓文喔！", true); return; }
+            window.open(`https://zh.dict.naver.com/#/search?query=${encodeURIComponent(t)}`);
+        }
+
+        function handleTagInput(e) { if (e.key === 'Enter' || e.keyCode === 13 || e.key === ' ' || e.key === ',') { e.preventDefault(); processTag(e.target.value); } }
+        function addTagFromButton() { processTag(document.getElementById('v-tag-input').value); }
+        function processTag(val) { const tag = val.trim().replace(/^#+/, '').replace(/[, ]/g, ''); if (tag && !currentTags.includes(tag)) { currentTags.push(tag); renderTagsInput(); } document.getElementById('v-tag-input').value = ''; }
+        function removeTag(tagToRemove) { currentTags = currentTags.filter(t => t !== tagToRemove); renderTagsInput(); }
+        function renderTagsInput() { document.getElementById('v-tag-display').innerHTML = currentTags.map(t => `<span class="tag-pill" onclick="removeTag('${t}')">#${t} <i data-lucide="x" style="width:14px; height:14px;"></i></span>`).join(''); lucide.createIcons(); }
+        function updateTagFilterDropdown() { const allTags = [...new Set(vocabs.flatMap(v => v.tags || []))].sort(), filterDropdown = document.getElementById('v-filter-tag'), currentSelection = filterDropdown.value; filterDropdown.innerHTML = '<option value="all">所有標籤 (All Tags)</option>' + allTags.map(t => `<option value="${t}">#${t}</option>`).join(''); if (allTags.includes(currentSelection)) filterDropdown.value = currentSelection; else filterDropdown.value = 'all'; }
+
+        function saveVocab() {
+            const ko = document.getElementById('v-ko').value.trim(), zh = document.getElementById('v-zh').value.trim(), pos = document.getElementById('v-pos').value, root = document.getElementById('v-root').value.trim(), tagsToSave = [...currentTags]; 
+            if(!ko || !zh) { showToast("請填寫完整喔！", true); return; }
+            if(vEditId) { const i = vocabs.findIndex(x => x.id === vEditId); if(i !== -1) vocabs[i] = { ...vocabs[i], ko, zh, pos, root, tags: tagsToSave }; vEditId = null; document.getElementById('v-header').innerHTML = '<i data-lucide="sparkles" style="color:#fbbf24;"></i> 錄入新詞'; lucide.createIcons(); showToast("更新成功！"); } 
+            else { vocabs.unshift({ id: Date.now(), ko, zh, pos, root, tags: tagsToSave }); showToast("已存入寶庫！"); }
+            localStorage.setItem('KV_vFinal', JSON.stringify(vocabs));
+            document.getElementById('v-ko').value = ''; document.getElementById('v-zh').value = ''; document.getElementById('v-root').value = ''; document.getElementById('v-tag-input').value = ''; currentTags = []; renderTagsInput(); toggleRootInput(); updateStats(); updateTagFilterDropdown();
+        }
+
+        function setVocabSort(mode) { vocabSortMode = mode; document.getElementById('tab-recent').classList.remove('active'); document.getElementById('tab-alpha').classList.remove('active'); document.getElementById('tab-' + mode).classList.add('active'); renderVocab(); }
+
+        function renderVocab() {
+            const term = document.getElementById('v-search').value.toLowerCase(), filterPos = document.getElementById('v-filter-pos').value, filterTag = document.getElementById('v-filter-tag').value; 
+            let list = vocabs.filter(v => v.ko.includes(term) || v.zh.includes(term));
+            if (filterPos !== 'all') list = list.filter(v => v.pos === filterPos); if (filterTag !== 'all') list = list.filter(v => v.tags && v.tags.includes(filterTag));
+            if (vocabSortMode === 'alpha') list.sort((a, b) => a.ko.localeCompare(b.ko, 'ko')); else list.sort((a, b) => b.id - a.id); 
+            document.getElementById('vocab-display').innerHTML = list.length === 0 ? '<p style="text-align:center; opacity:0.5; font-weight:bold; margin-top:30px;">空空如也...</p>' : 
+                list.map(v => {
+                    let rootHtml = v.root ? `<span style="margin-left:6px;">(${v.root})</span>` : ''; let tagsHtml = (v.tags || []).map(t => `<span class="tag-display">#${t}</span>`).join('');
+                    return `<div style="background:var(--bubble-bg); padding:24px; border-radius:24px; margin-bottom:16px; box-shadow:var(--bubble-shadow); border:none; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:1.3rem; font-weight:900; color:var(--text);">${v.ko} ${rootHtml} <span style="font-size:0.7rem; background:var(--primary); color:white; padding:4px 10px; border-radius:12px; opacity:0.9; margin-left:6px; vertical-align:middle;">${v.pos}</span></div><div style="margin-top:6px; opacity:0.7; font-size:0.95rem; font-weight:700;">${v.zh}</div><div style="margin-top:8px;">${tagsHtml}</div></div><div style="display:flex; gap:8px;"><button onclick="editVocab(${v.id})" class="btn-icon" style="width:36px; height:36px; background:var(--bg); box-shadow:none;"><i data-lucide="pencil" style="width:16px;"></i></button><button onclick="deleteItem('v', ${v.id})" class="btn-icon" style="width:36px; height:36px; color:var(--danger); background:var(--bg); box-shadow:none;"><i data-lucide="trash-2" style="width:16px;"></i></button></div></div>`
+                }).join('');
+            lucide.createIcons();
+        }
+
+        function editVocab(id) { vEditId = id; const v = vocabs.find(x => x.id === id); document.getElementById('v-ko').value = v.ko; document.getElementById('v-zh').value = v.zh; document.getElementById('v-pos').value = v.pos; document.getElementById('v-root').value = v.root || ''; toggleRootInput(); currentTags = [...(v.tags || [])]; renderTagsInput(); document.getElementById('v-header').innerHTML = '<i data-lucide="pencil"></i> 編輯單詞'; lucide.createIcons(); showPage('add-v', 0); }
+
+        function addExampleBlock(ko = '', zh = '', others = '') {
+            const block = document.createElement('div'); block.className = 'ex-block';
+            block.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;"><div style="font-weight: 900; color: var(--primary); font-size: 0.85rem; letter-spacing: 1px;"><i data-lucide="bookmark" style="width:14px; vertical-align:middle; margin-right:4px;"></i> 用法/例句 <span class="ex-index"></span></div><button onclick="this.parentElement.parentElement.remove(); updateExampleIndexes();" class="btn-icon" style="width: 28px; height: 28px; background: var(--bg); box-shadow: none;"><i data-lucide="x" style="width: 14px;"></i></button></div><textarea class="inp-ko" placeholder="用法說明 / 韓文例句 (Korean)..." rows="2" style="margin-bottom:8px;">${ko}</textarea><textarea class="inp-zh" placeholder="中文翻譯 (Translation)..." rows="2" style="margin-bottom:8px;">${zh}</textarea><textarea class="inp-others" placeholder="詳細備註 / 情境 (Others)..." rows="2" style="margin-bottom:0;">${others}</textarea>`;
+            document.getElementById('s-examples-container').appendChild(block); updateExampleIndexes(); lucide.createIcons();
+        }
+        function updateExampleIndexes() { document.querySelectorAll('.ex-block').forEach((block, index) => { block.querySelector('.ex-index').innerText = index + 1; }); }
+
+        function saveSentence() {
+            const title = document.getElementById('s-title').value.trim(), desc = document.getElementById('s-desc').value.trim();
+            if(!title) { showToast("標題 (語法形式) 不可空白喔", true); return; }
+            let examples = []; document.querySelectorAll('.ex-block').forEach(block => { const ko = block.querySelector('.inp-ko').value.trim(), zh = block.querySelector('.inp-zh').value.trim(), others = block.querySelector('.inp-others').value.trim(); if (ko || zh || others) examples.push({ ko, zh, others }); });
+            if(examples.length === 0) { showToast("至少需要填寫一個用法/例句", true); return; }
+            if(sEditId) { const i = sentences.findIndex(x => x.id === sEditId); if(i !== -1) sentences[i] = { ...sentences[i], title, desc, examples }; sEditId = null; document.getElementById('s-header').innerHTML = '<i data-lucide="scroll-text"></i> 錄入語法'; lucide.createIcons(); showToast("更新成功！"); } 
+            else { sentences.unshift({ id: Date.now(), title, desc, examples }); showToast("已存入語法庫！"); }
+            localStorage.setItem('KV_sFinal', JSON.stringify(sentences)); document.getElementById('s-title').value = ''; document.getElementById('s-desc').value = ''; document.getElementById('s-examples-container').innerHTML = ''; addExampleBlock(); updateStats();
+        }
+
+        function renderSentences() {
+            document.getElementById('sen-display').innerHTML = sentences.length === 0 ? '<p style="text-align:center; opacity:0.5; font-weight:bold; margin-top:30px;">暫無語法</p>' : 
+                sentences.map(s => { const exCount = s.examples ? s.examples.length : 0; return `<div style="background:var(--bubble-bg); box-shadow:var(--bubble-shadow); border-radius:24px; padding:24px; border:none; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="openSentenceModal(${s.id})"><div style="flex:1;"><div style="color:var(--primary); font-weight:900; font-size:1.3rem; margin-bottom:6px; letter-spacing: -0.5px;">${s.title || '無標題'}</div><div style="font-size:0.95rem; opacity:0.6; font-weight:700;">${s.desc || '點擊查看詳情...'}</div><div style="margin-top:10px; font-size:0.8rem; font-weight:800; background:var(--bg); display:inline-block; padding:4px 12px; border-radius:12px; color:var(--text); opacity:0.8;">共 ${exCount} 個用法</div></div><div style="display:flex; flex-direction: column; gap:8px;"><button onclick="event.stopPropagation(); editSentence(${s.id})" class="btn-icon" style="width:36px; height:36px; background:var(--bg); box-shadow:none;"><i data-lucide="pencil" style="width:16px;"></i></button><button onclick="event.stopPropagation(); deleteItem('s', ${s.id})" class="btn-icon" style="width:36px; height:36px; color:var(--danger); background:var(--bg); box-shadow:none;"><i data-lucide="trash-2" style="width:16px;"></i></button></div></div>` }).join('');
+            lucide.createIcons();
+        }
+
+        function openSentenceModal(id) {
+            const s = sentences.find(x => x.id === id); if(!s) return; currentModalSentenceId = id;
+            document.getElementById('m-title').innerText = s.title || '無標題'; document.getElementById('m-desc').innerText = s.desc || ''; document.getElementById('m-desc').style.display = s.desc ? 'block' : 'none';
+            const container = document.getElementById('m-examples-container');
+            if (s.examples && s.examples.length > 0) { container.innerHTML = s.examples.map((ex, idx) => { const borderStyle = idx !== s.examples.length - 1 ? 'border-bottom: 2px dashed rgba(0,0,0,0.06); padding-bottom: 20px; margin-bottom: 20px;' : ''; const koHtml = ex.ko ? `<b style="font-size:1.3rem; display:block; margin-bottom:8px; color:var(--text); line-height: 1.4;">${ex.ko}</b>` : ''; const zhHtml = ex.zh ? `<span style="display:block; opacity:0.8; font-size:1.05rem; font-weight:700; margin-bottom:12px;">${ex.zh}</span>` : ''; const othersHtml = ex.others ? `<div style="font-size:0.95rem; white-space: pre-wrap; opacity:0.9; line-height:1.6; font-weight:700; background: var(--bg); padding: 16px; border-radius: 16px;">${ex.others}</div>` : ''; return `<div style="${borderStyle}"><span style="font-size:0.75rem; font-weight:900; color:var(--primary); letter-spacing:2px; margin-bottom:12px; display:block; background: var(--bg); display: inline-block; padding: 4px 12px; border-radius: 12px;">用法 ${idx + 1}</span>${koHtml}${zhHtml}${othersHtml}</div>`; }).join(''); } else { container.innerHTML = '<div style="opacity:0.5; font-weight:bold; text-align:center;">暫無內容</div>'; }
+            document.getElementById('sentence-modal').classList.add('active');
+        }
+
+        function closeModal(e) { if(e) e.stopPropagation(); document.getElementById('sentence-modal').classList.remove('active'); currentModalSentenceId = null; }
+        function editModalSentence() { if(currentModalSentenceId) { const id = currentModalSentenceId; closeModal(); editSentence(id); } }
+
+        function editSentence(id) {
+            sEditId = id; const s = sentences.find(x => x.id === id); document.getElementById('s-title').value = s.title; document.getElementById('s-desc').value = s.desc; 
+            const container = document.getElementById('s-examples-container'); container.innerHTML = '';
+            if (s.examples && s.examples.length > 0) { s.examples.forEach(ex => addExampleBlock(ex.ko, ex.zh, ex.others)); } else { addExampleBlock(); }
+            document.getElementById('s-header').innerHTML = '<i data-lucide="pencil"></i> 編輯語法'; lucide.createIcons(); showPage('add-s', 3); 
+        }
+
+        function deleteItem(type, id) { if(!confirm("確定要刪除嗎？")) return; if(type === 'v') { vocabs = vocabs.filter(x => x.id !== id); localStorage.setItem('KV_vFinal', JSON.stringify(vocabs)); updateTagFilterDropdown(); renderVocab(); } else { sentences = sentences.filter(x => x.id !== id); localStorage.setItem('KV_sFinal', JSON.stringify(sentences)); renderSentences(); } updateStats(); }
+
+        function initFlashcards() { if(vocabs.length === 0) { showToast("詞庫是空的喔", true); return; } flashDeck = [...vocabs].sort(() => Math.random() - 0.5); document.getElementById('f-card').classList.remove('flipped'); document.getElementById('flash-actions').style.opacity = '0'; document.getElementById('flash-actions').style.pointerEvents = 'none'; nextFlashCard(); }
+        function nextFlashCard() { document.getElementById('f-counter').innerText = flashDeck.length; document.getElementById('f-card').classList.remove('flipped'); document.getElementById('flash-actions').style.opacity = '0'; document.getElementById('flash-actions').style.pointerEvents = 'none'; setTimeout(() => { if (flashDeck.length === 0) { document.getElementById('f-front-text').innerHTML = "🎉 太棒了！<br><span style='font-size:1.2rem;'>已複習完畢</span>"; document.getElementById('f-back').innerHTML = ""; currentFlash = null; return; } currentFlash = flashDeck[0]; document.getElementById('f-front-text').innerText = currentFlash.ko; const rootText = currentFlash.root ? `<div style="font-size:1rem; color:var(--bubble-bg); opacity:0.9; margin-top:8px;">(原型: ${currentFlash.root})</div>` : ''; const tagsHtml = (currentFlash.tags || []).map(t => `#${t}`).join(' '); const tagsDisplay = tagsHtml ? `<div style="font-size:0.85rem; opacity:0.7; margin-top:16px;">${tagsHtml}</div>` : ''; document.getElementById('f-back').innerHTML = `<span style="font-size:0.85rem; opacity:0.8; letter-spacing:2px;">${currentFlash.pos}</span>${rootText}<br><div style="margin-top:12px;">${currentFlash.zh}</div>${tagsDisplay}`; }, 200); }
+        function flipCard() { if (!currentFlash) return; const isFlipped = document.getElementById('f-card').classList.toggle('flipped'); document.getElementById('flash-actions').style.opacity = isFlipped ? '1' : '0'; document.getElementById('flash-actions').style.pointerEvents = isFlipped ? 'auto' : 'none'; }
+        function markFlashcard(isMemorized) { if (!currentFlash) return; const card = flashDeck.shift(); if (!isMemorized) flashDeck.push(card); nextFlashCard(); }
+
+
+        // ================= 遊樂場 Arcade Logic =================
+        function switchArcadeMode(mode) {
+            document.getElementById('tab-arcade-match').classList.remove('active'); document.getElementById('tab-arcade-grammar').classList.remove('active');
+            document.getElementById(`tab-arcade-${mode}`).classList.add('active');
+            
+            document.getElementById('arcade-match').classList.add('hidden'); document.getElementById('arcade-grammar').classList.add('hidden');
+            document.getElementById(`arcade-${mode}`).classList.remove('hidden');
+            
+            // 離開連連看就強制結束
+            if(mode !== 'match') forceEndMatchGame();
+        }
+
+        // --- Mode 1: 詞彙限時連連看 ---
+        let matchSlotsKo = [], matchSlotsZh = [];
+        let matchSelectedKo = null, matchSelectedZh = null; // 儲存選中的 Index (0~3)
+        let matchTimerObj = null;
+        let matchTimeLeft = 60;
+        let matchCombo = 0;
+        let matchCurrentScore = 0;
+
+        function startMatchGame() {
+            if(vocabs.length < 4) { showToast("至少需要 4 個單字才能挑戰連連看喔！", true); return; }
+            document.getElementById('match-intro').classList.add('hidden');
+            document.getElementById('match-play').classList.remove('hidden');
+            
+            matchTimeLeft = 60; matchCombo = 0; matchCurrentScore = 0;
+            document.getElementById('match-time-text').innerText = matchTimeLeft;
+            document.getElementById('match-time-bar').style.width = '100%';
+            document.getElementById('match-time-bar').style.backgroundColor = 'var(--primary)';
+            document.getElementById('match-combo-text').style.opacity = '0';
+            
+            // 初始化 4 個欄位
+            let initialPool = [...vocabs].sort(() => Math.random() - 0.5).slice(0, 4);
+            matchSlotsKo = [...initialPool].sort(() => Math.random() - 0.5);
+            matchSlotsZh = [...initialPool].sort(() => Math.random() - 0.5);
+            
+            matchSelectedKo = null; matchSelectedZh = null;
+            renderMatchGrid();
+
+            clearInterval(matchTimerObj);
+            matchTimerObj = setInterval(() => {
+                matchTimeLeft--;
+                document.getElementById('match-time-text').innerText = matchTimeLeft;
+                document.getElementById('match-time-bar').style.width = `${(matchTimeLeft/60)*100}%`;
+                if(matchTimeLeft <= 10) document.getElementById('match-time-bar').style.backgroundColor = 'var(--danger)';
+                
+                if(matchTimeLeft <= 0) { forceEndMatchGame(); showToast(`時間到！獲得 ${matchCurrentScore} 分！`); }
+            }, 1000);
+        }
+
+        function forceEndMatchGame() {
+            clearInterval(matchTimerObj); matchTimerObj = null;
+            document.getElementById('match-play').classList.add('hidden');
+            document.getElementById('match-intro').classList.remove('hidden');
+            if(matchCurrentScore > 0) addGlobalScore(matchCurrentScore);
+            matchCurrentScore = 0; matchCombo = 0;
+        }
+
+        function renderMatchGrid() {
+            const leftCol = document.getElementById('match-col-left');
+            const rightCol = document.getElementById('match-col-right');
+            
+            leftCol.innerHTML = matchSlotsKo.map((v, i) => 
+                `<button id="mk-${i}" class="match-btn ${matchSelectedKo === i ? 'selected' : ''}" onclick="selectMatch('ko', ${i})">${v.root ? v.root : v.ko}</button>`
+            ).join('');
+            
+            rightCol.innerHTML = matchSlotsZh.map((v, i) => 
+                `<button id="mz-${i}" class="match-btn ${matchSelectedZh === i ? 'selected' : ''}" onclick="selectMatch('zh', ${i})">${v.zh}</button>`
+            ).join('');
+        }
+
+        function selectMatch(type, index) {
+            if(type === 'ko') {
+                if(matchSelectedKo === index) matchSelectedKo = null; else matchSelectedKo = index;
+            } else {
+                if(matchSelectedZh === index) matchSelectedZh = null; else matchSelectedZh = index;
+            }
+            renderMatchGrid(); // 更新選取狀態
+
+            // 如果兩邊都有選取，進行判斷
+            if(matchSelectedKo !== null && matchSelectedZh !== null) {
+                const koItem = matchSlotsKo[matchSelectedKo];
+                const zhItem = matchSlotsZh[matchSelectedZh];
+                
+                const btnKo = document.getElementById(`mk-${matchSelectedKo}`);
+                const btnZh = document.getElementById(`mz-${matchSelectedZh}`);
+                
+                if(koItem.id === zhItem.id) {
+                    // 正確！
+                    btnKo.classList.add('correct'); btnZh.classList.add('correct');
+                    matchCombo++;
+                    let pts = 10 + (matchCombo > 1 ? (matchCombo-1)*5 : 0); // Combo 加分
+                    matchCurrentScore += pts;
+                    addGlobalScore(pts); // 即時加總分
+                    
+                    if(matchCombo > 1) {
+                        const comboText = document.getElementById('match-combo-text');
+                        comboText.innerText = `Combo x${matchCombo}!`;
+                        comboText.style.opacity = '1';
+                        setTimeout(() => comboText.style.opacity = '0', 1000);
+                    }
+
+                    // 0.3秒後抽新單字遞補
+                    setTimeout(() => {
+                        // 找一個不在當前 4 個槽位裡面的隨機單字
+                        let currentIds = matchSlotsKo.map(v => v.id);
+                        let availablePool = vocabs.filter(v => !currentIds.includes(v.id));
+                        
+                        if(availablePool.length > 0) {
+                            let newV = availablePool[Math.floor(Math.random()*availablePool.length)];
+                            matchSlotsKo[matchSelectedKo] = newV;
+                            matchSlotsZh[matchSelectedZh] = newV;
+                        } else {
+                            // 單字不夠多，只能重複抽
+                            let newV = vocabs[Math.floor(Math.random()*vocabs.length)];
+                            matchSlotsKo[matchSelectedKo] = newV;
+                            matchSlotsZh[matchSelectedZh] = newV;
+                        }
+                        
+                        matchSelectedKo = null; matchSelectedZh = null;
+                        renderMatchGrid();
+                    }, 300);
+                } else {
+                    // 錯誤！
+                    btnKo.classList.add('wrong'); btnZh.classList.add('wrong');
+                    matchCombo = 0; // 斷 Combo
+                    setTimeout(() => { matchSelectedKo = null; matchSelectedZh = null; renderMatchGrid(); }, 400);
+                }
+            }
+        }
+
+
+        // --- Mode 2: 語法情境戰 ---
+        function startGrammarGame() {
+            // 過濾出至少有例句的語法
+            const validSentences = sentences.filter(s => s.examples && s.examples.length > 0 && s.examples[0].ko !== '');
+            if(validSentences.length < 4) { showToast("至少需要錄入 4 個不同的語法(且含例句)才能挑戰喔！", true); return; }
+            
+            document.getElementById('grammar-intro').classList.add('hidden');
+            document.getElementById('grammar-play').classList.remove('hidden');
+            nextGrammarQuestion(validSentences);
+        }
+
+        function nextGrammarQuestion(validSentences) {
+            // 隨機挑選目標語法 & 例句
+            const targetSentence = validSentences[Math.floor(Math.random() * validSentences.length)];
+            const targetEx = targetSentence.examples[Math.floor(Math.random() * targetSentence.examples.length)];
+            
+            document.getElementById('g-ko').innerText = targetEx.ko;
+            document.getElementById('g-zh').innerText = targetEx.zh;
+            document.getElementById('g-feedback').innerText = "";
+
+            // 挑選3個錯誤選項
+            let options = [targetSentence];
+            while(options.length < 4) {
+                let r = validSentences[Math.floor(Math.random() * validSentences.length)];
+                if(!options.find(o => o.id === r.id)) options.push(r);
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            document.getElementById('grammar-options').innerHTML = options.map(o => `
+                <button class="btn-main" style="background:var(--bubble-bg); color:var(--text); border:none; margin-bottom:12px; font-weight:800; box-shadow:var(--bubble-shadow);" onclick="checkGrammarAns(this, ${o.id}, ${targetSentence.id})">${o.title}</button>
+            `).join('');
+        }
+
+        function checkGrammarAns(btn, selectedId, correctId) {
+            Array.from(document.getElementById('grammar-options').children).forEach(b => b.style.pointerEvents = 'none');
+            const validSentences = sentences.filter(s => s.examples && s.examples.length > 0 && s.examples[0].ko !== '');
+            
+            if(selectedId === correctId) {
+                addGlobalScore(15); // 語法比較難，給 15 分
+                btn.style.background = "var(--success)"; btn.style.color = "white";
+                document.getElementById('g-feedback').innerHTML = "<span style='color:var(--success)'>✅ 分析正確！</span>";
+                setTimeout(() => nextGrammarQuestion(validSentences), 1200);
+            } else {
+                btn.style.background = "var(--danger)"; btn.style.color = "white";
+                Array.from(document.getElementById('grammar-options').children).forEach(b => {
+                    if(b.getAttribute('onclick').includes(`, ${correctId})`)) { b.style.boxShadow = "0 0 0 3px var(--success)"; b.style.color = "var(--success)"; }
+                });
+                document.getElementById('g-feedback').innerHTML = "<span style='color:var(--danger)'>❌ 答錯了</span>";
+                setTimeout(() => nextGrammarQuestion(validSentences), 2500); 
+            }
+        }
+
+        // ================= 工具與初始載入 =================
+        function exportData() {
+            const cleanSentences = sentences.map(s => (!s.examples ? { ...s, examples: [{ko: s.ko||'', zh: s.zh||'', others: s.others||''}] } : s));
+            const blob = new Blob([JSON.stringify({vocabs, sentences: cleanSentences})], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Backup.json'; a.click();
+        }
+        function importData(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const data = JSON.parse(event.target.result);
+                if(data.vocabs) { vocabs = data.vocabs; sentences = data.sentences || []; localStorage.setItem('KV_vFinal', JSON.stringify(vocabs)); localStorage.setItem('KV_sFinal', JSON.stringify(sentences)); location.reload(); }
+            };
+            if(e.target.files[0]) reader.readAsText(e.target.files[0]);
+        }
+        function openNaver() { const t = document.getElementById('v-ko').value; if(t) window.open(`https://zh.dict.naver.com/#/search?query=${encodeURIComponent(t)}`); }
+        async function getAutoTranslation() { 
+            const t = document.getElementById('v-ko').value; if(!t) return;
+            document.getElementById('v-zh').placeholder = "翻譯中...";
+            try {
+                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(t)}&langpair=ko|zh-TW`);
+                const data = await res.json();
+                if(data.responseData.translatedText) document.getElementById('v-zh').value = data.responseData.translatedText;
+            } catch(e) {}
+            document.getElementById('v-zh').placeholder = "中文、英文或備註";
+        }
+
+        updateStats(); toggleRootInput(); updateTagFilterDropdown(); 
+        
+    </script>
+</body>
+</html>
